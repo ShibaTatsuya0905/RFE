@@ -10,7 +10,7 @@ const mockLogs = [
 
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [setUser] = useState<any>(null);
 
   const [profileData, setProfileData] = useState({
     name: '',

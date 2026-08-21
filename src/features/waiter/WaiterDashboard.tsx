@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, LogOut, Check, Sparkles, MapPin, AlertCircle } from 'lucide-react';
+import { Bell, LogOut, Check, Sparkles, AlertCircle } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';

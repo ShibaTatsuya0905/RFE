@@ -62,7 +62,7 @@ const CustomerMenu: React.FC = () => {
   const [selectedToppings, setSelectedToppings] = useState<Record<string, number>>({});
   const [customQty, setCustomQty] = useState(1);
 
-  const { items, addToCart, updateQuantity, removeFromCart, clearCart, getTotalPrice } = useCartStore();
+  const { items, addToCart, updateQuantity, clearCart, getTotalPrice } = useCartStore();
   const addToast = useToastStore(state => state.addToast);
 
   const t = dictionary[lang];

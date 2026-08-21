@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AreaChart, Area, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { FileDown, Calendar, AlertCircle, TrendingDown, ClipboardList } from 'lucide-react';
+import { FileDown, Calendar, TrendingDown, ClipboardList } from 'lucide-react';
 
 const cancelRateData = [
   { name: 'Mon', rate: 2 },

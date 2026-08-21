@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
+import { ChefHat, Mail, Lock, User, LogIn } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 
 const Login: React.FC = () => {

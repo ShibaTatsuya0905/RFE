@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Search, SlidersHorizontal, Eye, Printer, X, 
-  CheckCircle2, Clock, RotateCcw, ChevronLeft, ChevronRight 
+  CheckCircle2, Clock, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
@@ -10,7 +10,7 @@ import type { Order } from '../../types';
 
 const OrdersManagement: React.FC = () => {
   useSignalR();
-  const { orders, setOrders, updateOrderStatus } = useOrderStore();
+  const { orders, setOrders, } = useOrderStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
