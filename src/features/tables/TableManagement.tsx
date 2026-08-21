@@ -189,7 +189,8 @@ const TableManagement: React.FC = () => {
             <p className="text-sm text-slate-400 mb-8">{qrModalTable.name} • {qrModalTable.capacity} Seats</p>
             
             <div className="w-56 h-56 bg-white p-3 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-blue-500/10">
-<img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://rfe-4q7z.onrender.com/menu/${qrModalTable.id}`} alt="QR Code" className="w-full h-full" />
+<img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://rfe-4q7z.onrender.com/menu/${qrModalTable.id}`} alt="QR Code" className="w-full h-full" /></div>
+
             <button onClick={() => window.print()} className="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20">
               <Printer size={18} /> Print QR Tag
             </button>
