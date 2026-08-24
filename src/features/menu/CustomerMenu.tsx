@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Plus, Minus, X, Check, Utensils, Bell, Receipt, ArrowLeft, Languages } from 'lucide-react';
+import { ShoppingBag, Plus, Minus, X, Check, Utensils, Bell, Receipt, ArrowLeft, Languages, ClipboardList } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useCartStore } from '../../store/useCartStore';
 import { useToastStore } from '../../store/useToastStore';
+import { useOrderStore } from '../../store/useOrderStore';
+import { useSignalR } from '../../hooks/useSignalR';
 
 const dictionary = {
   vi: {
@@ -21,7 +23,10 @@ const dictionary = {
     alertSuccess: 'Đặt món thành công! Bếp đang chuẩn bị món.',
     alertSuccessCall: 'Yêu cầu đã được gửi! Nhân viên đang đến hỗ trợ bạn.',
     alertFail: 'Lỗi đặt món. Vui lòng thử lại.',
-    back: 'Quay lại'
+    back: 'Quay lại',
+    menuTab: 'Thực đơn',
+    historyTab: 'Đơn đã gọi',
+    noHistory: 'Bạn chưa đặt món nào trong phiên này.'
   },
   en: {
     welcome: 'Welcome to',
@@ -38,15 +43,20 @@ const dictionary = {
     alertSuccess: 'Ordered successfully! The kitchen is preparing your meal.',
     alertSuccessCall: 'Request sent! Staff is coming to assist you.',
     alertFail: 'Order failed. Please try again.',
-    back: 'Back'
+    back: 'Back',
+    menuTab: 'Menu',
+    historyTab: 'My Orders',
+    noHistory: 'You have not placed any orders yet.'
   }
 };
 
 const sizeKeywords = ['tô', 'size', 'lớn', 'nhỏ', 'thường', 'đặc biệt', 'regular', 'large', 'small', 'special'];
 
 const CustomerMenu: React.FC = () => {
+  useSignalR();
   const { tableId } = useParams();
   const [view, setView] = useState<'portal' | 'menu'>('portal');
+  const [customerTab, setCustomerTab] = useState<'menu' | 'history'>('menu');
   const [lang, setLang] = useState<'vi' | 'en'>('vi');
   const [foods, setFoods] = useState<any[]>([]);
   const [tableName, setTableName] = useState<string>('');
@@ -62,7 +72,8 @@ const CustomerMenu: React.FC = () => {
   const [selectedToppings, setSelectedToppings] = useState<Record<string, number>>({});
   const [customQty, setCustomQty] = useState(1);
 
-  const { items, addToCart, updateQuantity, clearCart, getTotalPrice } = useCartStore();
+  const { items, addToCart, updateQuantity, removeFromCart, clearCart, getTotalPrice } = useCartStore();
+  const { orders, setOrders } = useOrderStore();
   const addToast = useToastStore(state => state.addToast);
 
   const t = dictionary[lang];
@@ -81,12 +92,14 @@ const CustomerMenu: React.FC = () => {
       setFoods(parsedFoods);
     });
 
+    apiClient.get('/orders/active').then(res => setOrders(res.data));
+
     if (tableId) {
       apiClient.get(`/tables/${tableId}`)
         .then(res => setTableName(res.data.name))
         .catch(() => setTableName(`Bàn ${tableId}`));
     }
-  }, [tableId]);
+  }, [tableId, setOrders]);
 
   const handleCallService = async (type: string) => {
     setIsCalling(true);
@@ -188,7 +201,8 @@ const CustomerMenu: React.FC = () => {
       const opt = toppingOptions.find(o => o.name === name);
       if (opt && qty > 0) {
         finalPrice += (opt.price * qty);
-        optionNotes.push(`+ ${name} x${qty} (+${(opt.price * qty).toLocaleString()}đ)`);
+        const sign = opt.price < 0 ? "" : "+";
+        optionNotes.push(`+ ${name} x${qty} (${sign}${(opt.price * qty).toLocaleString()}đ)`);
       }
     });
 
@@ -229,6 +243,7 @@ const CustomerMenu: React.FC = () => {
       });
       clearCart();
       setIsCartOpen(false);
+      setCustomerTab('history');
       addToast(t.alertSuccess, 'success');
     } catch (error) {
       addToast(t.alertFail, 'error');
@@ -237,12 +252,14 @@ const CustomerMenu: React.FC = () => {
     }
   };
 
+  const tableOrders = orders.filter(o => o.tableId === Number(tableId));
+
   const LanguageSwitcher = () => (
     <button
       onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
       className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition"
     >
-      <Languages size={14} className="text-[#FF6B35]" />
+      <Languages size={14} />
       <span>{lang === 'vi' ? 'EN' : 'VI'}</span>
     </button>
   );
@@ -250,7 +267,7 @@ const CustomerMenu: React.FC = () => {
   if (view === 'portal') {
     return (
       <div className="min-h-screen bg-[#0B1120] text-white font-sans flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute w-80 h-80 bg-[#FF6B35]/10 rounded-full blur-[100px] -top-20 -left-20 animate-pulse" />
+        <div className="absolute w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] -top-20 -left-20 animate-pulse" />
         <div className="absolute w-80 h-80 bg-purple-500/5 rounded-full blur-[100px] -bottom-20 -right-20" />
 
         <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800 p-8 rounded-[36px] shadow-2xl z-10 text-center relative">
@@ -258,35 +275,13 @@ const CustomerMenu: React.FC = () => {
             <LanguageSwitcher />
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-wider text-[#FF6B35] mb-2 mt-6">RESTAURANT</h1>
+          <h1 className="text-3xl font-extrabold tracking-wider text-blue-500 mb-2 mt-6">RESTAURANT</h1>
           <p className="text-lg font-bold text-white mb-8">{tableName || `Bàn ${tableId}`}</p>
 
           <div className="space-y-4">
-            <button 
-              onClick={() => setView('menu')}
-              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition shadow-lg shadow-[#FF6B35]/20 active:scale-[0.98]"
-            >
-              <Utensils size={22} />
-              {t.browseMenu}
-            </button>
-
-            <button 
-              disabled={isCalling}
-              onClick={() => handleCallService('Assistance')}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-yellow-500"
-            >
-              <Bell size={22} />
-              {t.callWaiter}
-            </button>
-
-            <button 
-              disabled={isCalling}
-              onClick={() => handleCallService('Bill')}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-green-500"
-            >
-              <Receipt size={22} />
-              {t.requestBill}
-            </button>
+            <button onClick={() => setView('menu')} className="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition shadow-lg shadow-blue-500/20 active:scale-[0.98]"><Utensils size={22} />{t.browseMenu}</button>
+            <button disabled={isCalling} onClick={() => handleCallService('Assistance')} className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-yellow-500"><Bell size={22} />{t.callWaiter}</button>
+            <button disabled={isCalling} onClick={() => handleCallService('Bill')} className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-green-500"><Receipt size={22} />{t.requestBill}</button>
           </div>
         </div>
       </div>
@@ -296,77 +291,143 @@ const CustomerMenu: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white font-sans flex justify-center pb-28">
       <div className="w-full max-w-md p-4 relative">
-        <div className="flex justify-between items-center mb-6 pt-4">
+        <div className="flex justify-between items-center mb-4 pt-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setView('portal')} className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 transition">
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-[#FF6B35]">{t.back}</h1>
+              <h1 className="text-xl font-bold text-blue-500">{t.back}</h1>
               <p className="text-xs text-slate-400 font-semibold">{tableName || `Bàn ${tableId}`}</p>
             </div>
           </div>
           <LanguageSwitcher />
         </div>
 
-        {categories.length > 0 && (
-          <div className="sticky top-0 z-30 bg-black/90 backdrop-blur-md py-3.5 -mx-4 px-4 flex overflow-x-auto gap-2.5 no-scrollbar border-b border-slate-800/80">
-            {categories.map((cat) => (
-              <button key={cat} onClick={() => scrollToCategory(cat)} className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-bold text-xs tracking-tight transition-all duration-300 ${activeCategory === cat ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 scale-[1.02]' : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white'}`}>{cat}</button>
-            ))}
-          </div>
+        <div className="flex border border-slate-800 bg-slate-900 rounded-2xl p-1 mb-6">
+          <button 
+            onClick={() => setCustomerTab('menu')}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition ${customerTab === 'menu' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          >
+            {t.menuTab}
+          </button>
+          <button 
+            onClick={() => setCustomerTab('history')}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${customerTab === 'history' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          >
+            <ClipboardList size={14} /> {t.historyTab} ({tableOrders.length})
+          </button>
+        </div>
+
+        {customerTab === 'menu' && (
+          <>
+            {categories.length > 0 && (
+              <div className="sticky top-0 z-30 bg-black/90 backdrop-blur-md py-3 -mx-4 px-4 flex overflow-x-auto gap-3 no-scrollbar border-b border-slate-800">
+                {categories.map((cat) => (
+                  <button key={cat} onClick={() => scrollToCategory(cat)} className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-200 ${activeCategory === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'}`}>{cat}</button>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6">
+              {categories.map(category => (
+                <div key={category} id={`category-${category}`} className="mb-10 pt-2">
+                  <h2 className="text-2xl font-extrabold text-white mb-5 flex items-center gap-2 tracking-tight">{category}</h2>
+                  <div className="space-y-4">
+                    {groupedFoods[category].map((food: any) => {
+                      const quantity = getCartItemQuantity(food.id);
+                      const isCustomizable = food.options && food.options.length > 0;
+                      return (
+                        <div key={food.id} className="bg-slate-900 rounded-3xl p-4 flex gap-4 items-center border border-gray-800 shadow-md animate-fade-in">
+                          <div className="w-24 h-24 bg-slate-800 rounded-2xl flex-shrink-0 flex items-center justify-center text-xs text-gray-500 overflow-hidden border border-slate-800 relative">
+                            {food.imageUrl ? <img src={food.imageUrl} className="w-full h-full object-cover" /> : <Utensils size={24} />}
+                            {food.price > 40000 && (
+                              <span className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider shadow-md">BEST SELLER</span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-slate-100 leading-tight">{food.name}</h3>
+                            {food.description && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{food.description}</p>}
+                            <p className="text-blue-500 font-extrabold text-lg mt-2">{food.price.toLocaleString()} đ</p>
+                          </div>
+                          
+                          {quantity > 0 && !isCustomizable ? (
+                            <div className="flex items-center gap-2 bg-blue-600 rounded-2xl p-1 shadow-lg shadow-blue-500/10">
+                              <button onClick={() => updateQuantity(food.id.toString(), quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={14} /></button>
+                              <input 
+                                type="number" 
+                                value={quantity} 
+                                onChange={(e) => updateQuantity(food.id.toString(), Math.max(0, parseInt(e.target.value) || 0))}
+                                className="w-12 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <button onClick={() => updateQuantity(food.id.toString(), quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={14} /></button>
+                            </div>
+                          ) : (
+                            <button onClick={() => handleAddClick(food)} className="bg-blue-600 hover:bg-blue-500 p-3 rounded-2xl transition duration-200 shadow-lg shadow-blue-500/20 active:scale-90">
+                              <Plus size={20} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {foods.length === 0 && (
+                <div className="text-center py-20">
+                  <Utensils size={48} className="mx-auto text-slate-700 mb-4" />
+                  <p className="text-slate-500 font-semibold">{t.noFood}</p>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
-        <div className="mt-6">
-          {categories.map(category => (
-            <div key={category} id={`category-${category}`} className="mb-10 pt-2">
-              <h2 className="text-2xl font-extrabold text-white mb-5 flex items-center gap-2 tracking-tight">{category}</h2>
-              <div className="space-y-4">
-                {groupedFoods[category].map((food: any) => {
-                  const quantity = getCartItemQuantity(food.id);
-                  const isCustomizable = food.options && food.options.length > 0;
-                  return (
-                    <div key={food.id} className="bg-slate-900 rounded-3xl p-4 flex gap-4 items-center border border-gray-800 shadow-md animate-fade-in">
-                      <div className="w-24 h-24 bg-slate-800 rounded-2xl flex-shrink-0 flex items-center justify-center text-xs text-gray-500 overflow-hidden border border-slate-800 relative">
-                        {food.imageUrl ? <img src={food.imageUrl} className="w-full h-full object-cover" /> : <Utensils size={24} />}
-                        {food.price > 40000 && (
-                          <span className="absolute top-1.5 left-1.5 bg-[#FF6B35] text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider shadow-md">BEST SELLER</span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg text-slate-100 leading-tight">{food.name}</h3>
-                        {food.description && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{food.description}</p>}
-                        <p className="text-[#FF6B35] font-extrabold text-lg mt-2">{food.price.toLocaleString()} đ</p>
-                      </div>
-                      
-                      {quantity > 0 && !isCustomizable ? (
-                        <div className="flex items-center gap-2 bg-[#FF6B35] rounded-2xl p-1 shadow-lg shadow-[#FF6B35]/10">
-                          <button onClick={() => updateQuantity(food.id.toString(), quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={14} /></button>
-                          <input 
-                            type="number" 
-                            value={quantity} 
-                            onChange={(e) => updateQuantity(food.id.toString(), Math.max(0, parseInt(e.target.value) || 0))}
-                            className="w-12 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <button onClick={() => updateQuantity(food.id.toString(), quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={14} /></button>
-                        </div>
-                      ) : (
-                        <button onClick={() => handleAddClick(food)} className="bg-[#FF6B35] hover:bg-[#E8541E] p-3 rounded-2xl transition duration-200 shadow-lg shadow-[#FF6B35]/20 active:scale-90">
-                          <Plus size={20} />
-                        </button>
-                      )}
+        {customerTab === 'history' && (
+          <div className="space-y-4 mt-4 animate-fade-in">
+            {tableOrders.map(order => (
+              <div key={order.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <div>
+                    <h3 className="font-extrabold text-white text-base">{order.orderCode}</h3>
+                    <p className="text-xs text-slate-400">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    order.status === 'Paid' || order.status === 'Served' ? 'bg-green-500/10 text-green-500' :
+                    order.status === 'Cooking' ? 'bg-blue-500/10 text-blue-400' : 'bg-yellow-500/10 text-yellow-500'
+                  }`}>
+                    {order.status}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {order.orderDetails.map(item => (
+                    <div key={item.id} className="flex justify-between text-sm text-slate-200">
+                      <span>{item.quantity} x {item.foodName}</span>
+                      <span className="font-semibold">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+                <div className="pt-3 border-t border-slate-800 flex justify-between font-bold text-sm">
+                  <span>Tổng cộng:</span>
+                  <span className="text-blue-500">{order.totalAmount.toLocaleString()} đ</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+
+            {tableOrders.length === 0 && (
+              <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800 border-dashed">
+                <ClipboardList size={48} className="mx-auto text-slate-600 mb-4" />
+                <p className="text-slate-500 text-sm font-semibold">{t.noHistory}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {items.length > 0 && (
+      {items.length > 0 && customerTab === 'menu' && (
         <div className="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none z-40">
-          <button onClick={() => setIsCartOpen(true)} className="pointer-events-auto bg-[#FF6B35] w-full max-w-md py-4 rounded-3xl font-bold text-lg shadow-2xl flex justify-between px-6 items-center hover:bg-[#E8541E] transition active:scale-[0.98]">
+          <button onClick={() => setIsCartOpen(true)} className="pointer-events-auto bg-blue-600 w-full max-w-md py-4 rounded-3xl font-bold text-lg shadow-2xl flex justify-between px-6 items-center hover:bg-blue-500 transition active:scale-[0.98]">
             <div className="flex items-center gap-2"><ShoppingBag /><span>{items.reduce((acc, i) => acc + i.quantity, 0)} {t.itemsCount}</span></div>
             <span>{getTotalPrice().toLocaleString()} đ</span>
           </button>
@@ -387,9 +448,9 @@ const CustomerMenu: React.FC = () => {
                   <div className="flex-1 pr-4">
                     <h3 className="font-bold text-slate-100 text-lg leading-tight">{item.foodName}</h3>
                     {item.notes && <p className="text-xs text-slate-400 mt-1 italic">{item.notes}</p>}
-                    <p className="text-sm text-[#FF6B35] font-bold mt-1.5">{item.price.toLocaleString()} đ</p>
+                    <p className="text-sm text-blue-500 font-bold mt-1.5">{item.price.toLocaleString()} đ</p>
                   </div>
-                  <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1">
+                  <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1">
                     <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={12} /></button>
                     <input 
                       type="number" 
@@ -406,12 +467,12 @@ const CustomerMenu: React.FC = () => {
             <div className="mt-4 pt-6 border-t border-slate-800">
               <div className="flex justify-between text-2xl font-bold mb-6">
                 <span>{t.total}:</span>
-                <span className="text-[#FF6B35] font-bold">{getTotalPrice().toLocaleString()} đ</span>
+                <span className="text-blue-500">{getTotalPrice().toLocaleString()} đ</span>
               </div>
               <button 
                 onClick={submitOrder} 
                 disabled={isOrdering}
-                className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition disabled:bg-slate-800 flex items-center justify-center gap-2 active:scale-[0.98]"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition disabled:bg-slate-800 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <Check size={20} />
                 {isOrdering ? t.sending : t.confirmOrder}
@@ -446,7 +507,7 @@ const CustomerMenu: React.FC = () => {
                         onClick={() => setSelectedSizeOption(opt)}
                         className={`p-4 rounded-2xl border font-bold text-sm text-center transition ${
                           selectedSizeOption?.name === opt.name 
-                            ? 'bg-[#FF6B35]/10 border-[#FF6B35] text-[#FF6B35]' 
+                            ? 'bg-blue-600/10 border-blue-500 text-blue-500' 
                             : 'bg-slate-950 border-slate-800 text-slate-300'
                         }`}
                       >
@@ -472,19 +533,18 @@ const CustomerMenu: React.FC = () => {
                         >
                           <div className="flex flex-col">
                             <span className="font-bold text-sm text-white">{opt.name}</span>
-                            <span className="text-xs text-[#FF6B35] font-bold">{opt.price < 0 ? `${opt.price.toLocaleString()} đ` : `+${opt.price.toLocaleString()} đ`}</span>
+                            <span className="text-xs text-blue-500 font-bold">{opt.price < 0 ? `${opt.price.toLocaleString()} đ` : `+${opt.price.toLocaleString()} đ`}</span>
                           </div>
 
                           {qty > 0 ? (
-                            <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1 shadow-lg">
+                            <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1 shadow-lg">
                               <button type="button" onClick={() => updateToppingQty(opt.name, -1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Minus size={14} /></button>
                               <span className="font-extrabold text-sm w-4 text-center text-white">{qty}</span>
                               <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Plus size={14} /></button>
                             </div>
                           ) : (
                             <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-slate-300 transition">
-                              <Plus size={14} />
-                            </button>
+                              <Plus size={14} /></button>
                           )}
                         </div>
                       );
@@ -495,7 +555,7 @@ const CustomerMenu: React.FC = () => {
 
               <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
                 <span className="text-xs font-bold text-slate-400">CHỌN SỐ LƯỢNG MÓN CHÍNH:</span>
-                <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1">
+                <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1">
                   <button type="button" onClick={() => setCustomQty(prev => Math.max(1, prev - 1))} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Minus size={14} /></button>
                   <input 
                     type="number" 
@@ -510,7 +570,7 @@ const CustomerMenu: React.FC = () => {
 
             <button 
               onClick={handleConfirmCustomization}
-              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition"
             >
               THÊM VÀO GIỎ HÀNG
             </button>
