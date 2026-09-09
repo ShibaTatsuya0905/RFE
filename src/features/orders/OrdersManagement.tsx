@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Search, SlidersHorizontal, Eye, Printer, X, 
-  CheckCircle2, Clock, ChevronLeft, ChevronRight 
-} from 'lucide-react';
+import { Search, SlidersHorizontal, Eye, Printer, X, CheckCircle2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
@@ -10,7 +7,7 @@ import type { Order } from '../../types';
 
 const OrdersManagement: React.FC = () => {
   useSignalR();
-  const { orders, setOrders, } = useOrderStore();
+  const { orders, setOrders, updateOrderStatus } = useOrderStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,11 +65,11 @@ const OrdersManagement: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Orders Management</h1>
@@ -87,16 +84,16 @@ const OrdersManagement: React.FC = () => {
             type="text" 
             placeholder="Search by order ID or table..." 
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-blue-500"
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition"
           />
         </div>
         <div className="relative">
           <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <select 
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white appearance-none focus:outline-none focus:border-blue-500"
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white appearance-none focus:outline-none focus:border-blue-500 transition"
           >
             <option value="All">All Statuses</option>
             <option value="Pending">Pending</option>
@@ -108,7 +105,7 @@ const OrdersManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -123,13 +120,13 @@ const OrdersManagement: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-800/50 text-sm">
               {paginatedOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-slate-800/10">
+                <tr key={order.id} className="hover:bg-slate-800/20 transition duration-150">
                   <td className="p-4 font-bold text-blue-500">{order.orderCode}</td>
                   <td className="p-4 text-white font-medium">{order.tableName}</td>
                   <td className="p-4 text-slate-400">{new Date(order.createdAt).toLocaleTimeString()}</td>
                   <td className="p-4 text-slate-200 font-semibold">{order.totalAmount.toLocaleString()} đ</td>
                   <td className="p-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${getStatusBadgeClass(order.status)}`}>
                       {order.status}
                     </span>
                   </td>
@@ -143,36 +140,48 @@ const OrdersManagement: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {paginatedOrders.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-slate-500">No orders found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-800 flex justify-between items-center text-sm text-slate-400 bg-slate-950/10">
-            <span>Showing {paginatedOrders.length} of {filteredOrders.length} orders</span>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 rounded-lg transition text-white"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:hover:bg-slate-800 rounded-lg transition text-white"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="flex justify-between items-center text-sm text-slate-400 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl">
+        <span className="font-semibold">Showing Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span> (Total <span className="text-white">{filteredOrders.length}</span> orders)</span>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl transition text-white"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            <button 
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1.5 rounded-xl font-bold transition ${currentPage === page ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'}`}
+            >
+              {page}
+            </button>
+          ))}
+          <button 
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 rounded-xl transition text-white"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
       </div>
 
       {selectedOrder && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex justify-end">
-          <div className="bg-slate-950 w-full max-w-lg h-full border-l border-slate-800 p-6 flex flex-col justify-between animate-slide-up shadow-2xl">
+        <div className="fixed inset-0 bg-black/70 z-50 flex justify-end backdrop-blur-sm">
+          <div className="bg-slate-900 w-full max-w-lg h-full border-l border-slate-800 p-6 flex flex-col justify-between animate-slide-up shadow-2xl">
             <div>
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
                 <div>
@@ -181,22 +190,22 @@ const OrdersManagement: React.FC = () => {
                 </div>
                 <button 
                   onClick={() => setSelectedOrder(null)}
-                  className="p-2 bg-slate-900 border border-slate-800 rounded-full text-slate-400 hover:text-white"
+                  className="p-2 bg-slate-800 border border-slate-700 rounded-full text-slate-400 hover:text-white transition"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <div className="space-y-4 mb-6 max-h-[45vh] overflow-y-auto">
+              <div className="space-y-4 mb-6 max-h-[45vh] overflow-y-auto pr-1">
                 {selectedOrder.orderDetails.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm bg-slate-900/50 p-4 rounded-xl border border-slate-800/40">
+                  <div key={item.id} className="flex justify-between text-sm bg-slate-950 p-4 rounded-2xl border border-slate-800/40">
                     <div>
-                      <h4 className="font-semibold text-white">{item.foodName}</h4>
-                      {item.notes && <p className="text-xs text-red-400 mt-1 italic">Note: {item.notes}</p>}
+                      <h4 className="font-bold text-white text-base">{item.foodName}</h4>
+                      {item.notes && <p className="text-xs text-blue-400 mt-1.5 font-medium leading-relaxed bg-blue-500/10 p-2 rounded-xl border border-blue-500/20">{item.notes}</p>}
                     </div>
                     <div className="text-right">
                       <p className="text-slate-400">{item.quantity} x {item.unitPrice.toLocaleString()} đ</p>
-                      <p className="font-bold text-slate-200">{(item.quantity * item.unitPrice).toLocaleString()} đ</p>
+                      <p className="font-bold text-slate-200 mt-1">{(item.quantity * item.unitPrice).toLocaleString()} đ</p>
                     </div>
                   </div>
                 ))}
@@ -213,7 +222,7 @@ const OrdersManagement: React.FC = () => {
                 {selectedOrder.status === 'Pending' && (
                   <button 
                     onClick={() => handleUpdateStatus(selectedOrder.id, 1)}
-                    className="col-span-2 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition text-white"
+                    className="col-span-2 bg-blue-600 hover:bg-blue-500 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition text-white"
                   >
                     <Clock size={18} /> Start Preparing
                   </button>
@@ -221,7 +230,7 @@ const OrdersManagement: React.FC = () => {
                 {selectedOrder.status === 'Cooking' && (
                   <button 
                     onClick={() => handleUpdateStatus(selectedOrder.id, 2)}
-                    className="col-span-2 bg-green-600 hover:bg-green-500 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition text-white"
+                    className="col-span-2 bg-green-600 hover:bg-green-500 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition text-white"
                   >
                     <CheckCircle2 size={18} /> Mark Ready
                   </button>
@@ -229,7 +238,7 @@ const OrdersManagement: React.FC = () => {
                 {selectedOrder.status !== 'Paid' && selectedOrder.status !== 'Cancelled' && (
                   <button 
                     onClick={() => handleUpdateStatus(selectedOrder.id, 5)}
-                    className="col-span-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition"
+                    className="col-span-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition"
                   >
                     <X size={18} /> Cancel Order
                   </button>
@@ -238,7 +247,7 @@ const OrdersManagement: React.FC = () => {
 
               <button 
                 onClick={() => window.print()}
-                className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition text-slate-300"
+                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition text-slate-300"
               >
                 <Printer size={18} /> Print Invoice Receipt
               </button>
