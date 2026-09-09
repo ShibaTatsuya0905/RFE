@@ -50,14 +50,14 @@ const AdminMenuManagement: React.FC = () => {
       setFoods(parsedFoods);
       setCategories(catsRes.data);
 
-      const paginationHeader = foodsRes.headers['x-pagination'];
+      const paginationHeader = foodsRes.headers['x-pagination'] || foodsRes.headers['X-Pagination'];
       if (paginationHeader && !showTrash) {
         const meta = JSON.parse(paginationHeader);
-        setTotalPages(meta.TotalPages);
-        setTotalCount(meta.TotalCount);
+        setTotalPages(meta.TotalPages || 1);
+        setTotalCount(meta.TotalCount || parsedFoods.length);
       } else {
         setTotalPages(1);
-        setTotalCount(foodsRes.data.length);
+        setTotalCount(parsedFoods.length);
       }
 
       if (catsRes.data.length > 0 && formData.categoryId === 0) {
@@ -231,7 +231,7 @@ const AdminMenuManagement: React.FC = () => {
               <div>
                 <h3 className="font-bold text-white text-lg tracking-tight">{food.displayName}</h3>
                 <p className="text-xs text-slate-500 mt-0.5">{food.categoryName}</p>
-                <p className="text-blue-500 font-extrabold mt-3 text-lg">{food.price.toLocaleString()} đ</p>
+                <p className="text-[#FF6B35] font-extrabold mt-3 text-lg">{food.price.toLocaleString()} đ</p>
               </div>
             </div>
             <div className="flex gap-2 mt-6 border-t border-slate-800/50 pt-4">
@@ -246,11 +246,14 @@ const AdminMenuManagement: React.FC = () => {
             </div>
           </div>
         ))}
+        {filteredFoods.length === 0 && (
+          <div className="col-span-3 text-center py-12 text-slate-500">No items found here.</div>
+        )}
       </div>
 
-      {!showTrash && totalPages > 1 && (
+      {!showTrash && (
         <div className="flex justify-between items-center text-sm text-slate-400 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <span>Showing Page {currentPage} of {totalPages} ({totalCount} items)</span>
+          <span className="font-semibold">Showing Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span> (Total <span className="text-white">{totalCount}</span> items)</span>
           <div className="flex gap-2">
             <button 
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -263,7 +266,7 @@ const AdminMenuManagement: React.FC = () => {
               <button 
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1.5 rounded-xl font-bold transition ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-400'}`}
+                className={`px-4 py-1.5 rounded-xl font-bold transition ${currentPage === page ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}
               >
                 {page}
               </button>
@@ -287,7 +290,7 @@ const AdminMenuManagement: React.FC = () => {
             <form onSubmit={handleSubmitCategory} className="space-y-4">
               <div>
                 <label className="text-xs text-slate-400 font-semibold block mb-1.5">Category Name</label>
-                <input required type="text" placeholder="e.g. Main Dish, Drinks..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none" />
+                <input required type="text" placeholder="e.g. Main Dish, Drinks..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-blue-500 transition" />
               </div>
               <button type="submit" disabled={isSubmitting} className="w-full bg-slate-800 hover:bg-slate-700 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white transition">
                 <Check size={18} /> {isSubmitting ? 'SAVING...' : 'SAVE CATEGORY'}
@@ -339,7 +342,7 @@ const AdminMenuManagement: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs text-slate-400 font-semibold block mb-1.5">Description</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none h-16 resize-none" />
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none h-20 resize-none" />
               </div>
 
               <div className="border-t border-slate-800/80 pt-4">
