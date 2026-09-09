@@ -106,7 +106,7 @@ const CustomerMenu: React.FC = () => {
     apiClient.get('/orders/active').then(res => setOrders(res.data));
 
     if (tableId) {
-      apiClient.get(`/tables/${tableId}` )
+      apiClient.get(`/tables/${tableId}`)
         .then(res => setTableName(res.data.name))
         .catch(() => setTableName(`Bàn ${tableId}`));
     }
@@ -244,7 +244,12 @@ const CustomerMenu: React.FC = () => {
     try {
       await apiClient.post('/orders', {
         tableId: Number(tableId),
-        items: items.map(i => ({ foodId: i.foodId, quantity: i.quantity, notes: i.notes }))
+        items: items.map(i => ({ 
+          foodId: i.foodId, 
+          quantity: i.quantity, 
+          unitPrice: i.price, 
+          notes: i.notes 
+        }))
       });
       clearCart();
       setIsCartOpen(false);
@@ -264,7 +269,7 @@ const CustomerMenu: React.FC = () => {
       onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
       className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition"
     >
-      <Languages size={14} />
+      <Languages size={14} className="text-[#FF6B35]" />
       <span>{lang === 'vi' ? 'EN' : 'VI'}</span>
     </button>
   );
@@ -272,7 +277,7 @@ const CustomerMenu: React.FC = () => {
   if (view === 'portal') {
     return (
       <div className="min-h-screen bg-[#0B1120] text-white font-sans flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] -top-20 -left-20 animate-pulse" />
+        <div className="absolute w-80 h-80 bg-[#FF6B35]/10 rounded-full blur-[100px] -top-20 -left-20 animate-pulse" />
         <div className="absolute w-80 h-80 bg-purple-500/5 rounded-full blur-[100px] -bottom-20 -right-20" />
 
         <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800 p-8 rounded-[36px] shadow-2xl z-10 text-center relative">
@@ -280,13 +285,35 @@ const CustomerMenu: React.FC = () => {
             <LanguageSwitcher />
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-wider text-blue-500 mb-2 mt-6">RESTAURANT</h1>
+          <h1 className="text-3xl font-extrabold tracking-wider text-[#FF6B35] mb-2 mt-6">RESTAURANT</h1>
           <p className="text-lg font-bold text-white mb-8">{tableName || `Bàn ${tableId}`}</p>
 
           <div className="space-y-4">
-            <button onClick={() => setView('menu')} className="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition shadow-lg shadow-blue-500/20 active:scale-[0.98]"><Utensils size={22} />{t.browseMenu}</button>
-            <button disabled={isCalling} onClick={() => handleCallService('Assistance')} className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-yellow-500"><Bell size={22} />{t.callWaiter}</button>
-            <button disabled={isCalling} onClick={() => handleCallService('Bill')} className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-green-500"><Receipt size={22} />{t.requestBill}</button>
+            <button 
+              onClick={() => setView('menu')}
+              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition shadow-lg shadow-[#FF6B35]/20 active:scale-[0.98]"
+            >
+              <Utensils size={22} />
+              {t.browseMenu}
+            </button>
+
+            <button 
+              disabled={isCalling}
+              onClick={() => handleCallService('Assistance')}
+              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-yellow-500"
+            >
+              <Bell size={22} />
+              {t.callWaiter}
+            </button>
+
+            <button 
+              disabled={isCalling}
+              onClick={() => handleCallService('Bill')}
+              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-green-500"
+            >
+              <Receipt size={22} />
+              {t.requestBill}
+            </button>
           </div>
         </div>
       </div>
@@ -302,7 +329,7 @@ const CustomerMenu: React.FC = () => {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-blue-500">{t.back}</h1>
+              <h1 className="text-xl font-bold text-[#FF6B35]">{t.back}</h1>
               <p className="text-xs text-slate-400 font-semibold">{tableName || `Bàn ${tableId}`}</p>
             </div>
           </div>
@@ -312,13 +339,13 @@ const CustomerMenu: React.FC = () => {
         <div className="flex border border-slate-800 bg-slate-900 rounded-2xl p-1 mb-6">
           <button 
             onClick={() => setCustomerTab('menu')}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition ${customerTab === 'menu' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition ${customerTab === 'menu' ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20' : 'text-slate-400 hover:text-white'}`}
           >
             {t.menuTab}
           </button>
           <button 
             onClick={() => setCustomerTab('history')}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${customerTab === 'history' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${customerTab === 'history' ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20' : 'text-slate-400 hover:text-white'}`}
           >
             <ClipboardList size={14} /> {t.historyTab} ({tableOrders.length})
           </button>
@@ -327,9 +354,9 @@ const CustomerMenu: React.FC = () => {
         {customerTab === 'menu' && (
           <>
             {categories.length > 0 && (
-              <div className="sticky top-0 z-30 bg-black/90 backdrop-blur-md py-3 -mx-4 px-4 flex overflow-x-auto gap-3 no-scrollbar border-b border-slate-800">
+              <div className="sticky top-0 z-30 bg-black/90 backdrop-blur-md py-3.5 -mx-4 px-4 flex overflow-x-auto gap-2.5 no-scrollbar border-b border-slate-800/80">
                 {categories.map((cat) => (
-                  <button key={cat} onClick={() => scrollToCategory(cat)} className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-200 ${activeCategory === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'}`}>{cat}</button>
+                  <button key={cat} onClick={() => scrollToCategory(cat)} className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-bold text-xs tracking-tight transition-all duration-300 ${activeCategory === cat ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 scale-[1.02]' : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white'}`}>{cat}</button>
                 ))}
               </div>
             )}
@@ -347,17 +374,17 @@ const CustomerMenu: React.FC = () => {
                           <div className="w-24 h-24 bg-slate-800 rounded-2xl flex-shrink-0 flex items-center justify-center text-xs text-gray-500 overflow-hidden border border-slate-800 relative">
                             {food.imageUrl ? <img src={food.imageUrl} className="w-full h-full object-cover" /> : <Utensils size={24} />}
                             {food.price > 40000 && (
-                              <span className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider shadow-md">BEST SELLER</span>
+                              <span className="absolute top-1.5 left-1.5 bg-[#FF6B35] text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider shadow-md">BEST SELLER</span>
                             )}
                           </div>
                           <div className="flex-1">
                             <h3 className="font-bold text-lg text-slate-100 leading-tight">{food.name}</h3>
                             {food.description && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{food.description}</p>}
-                            <p className="text-blue-500 font-extrabold text-lg mt-2">{food.price.toLocaleString()} đ</p>
+                            <p className="text-[#FF6B35] font-extrabold text-lg mt-2">{food.price.toLocaleString()} đ</p>
                           </div>
                           
                           {quantity > 0 && !isCustomizable ? (
-                            <div className="flex items-center gap-2 bg-blue-600 rounded-2xl p-1 shadow-lg shadow-blue-500/10">
+                            <div className="flex items-center gap-2 bg-[#FF6B35] rounded-2xl p-1 shadow-lg shadow-[#FF6B35]/10">
                               <button onClick={() => updateQuantity(food.id.toString(), quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={14} /></button>
                               <input 
                                 type="number" 
@@ -368,7 +395,7 @@ const CustomerMenu: React.FC = () => {
                               <button onClick={() => updateQuantity(food.id.toString(), quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={14} /></button>
                             </div>
                           ) : (
-                            <button onClick={() => handleAddClick(food)} className="bg-blue-600 hover:bg-blue-500 p-3 rounded-2xl transition duration-200 shadow-lg shadow-blue-500/20 active:scale-90">
+                            <button onClick={() => handleAddClick(food)} className="bg-[#FF6B35] hover:bg-[#E8541E] p-3 rounded-2xl transition duration-200 shadow-lg shadow-[#FF6B35]/20 active:scale-90">
                               <Plus size={20} />
                             </button>
                           )}
@@ -405,17 +432,24 @@ const CustomerMenu: React.FC = () => {
                     {order.status}
                   </span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {order.orderDetails.map(item => (
-                    <div key={item.id} className="flex justify-between text-sm text-slate-200">
-                      <span>{item.quantity} x {item.foodName}</span>
-                      <span className="font-semibold">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
+                    <div key={item.id} className="text-sm text-slate-200 border-b border-slate-800/40 pb-2">
+                      <div className="flex justify-between font-semibold">
+                        <span>{item.quantity} x {item.foodName}</span>
+                        <span className="text-[#FF6B35]">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
+                      </div>
+                      {item.notes && (
+                        <p className="text-xs text-blue-400 mt-1 font-medium bg-blue-500/10 p-2 rounded-xl border border-blue-500/20">
+                          {item.notes}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
-                <div className="pt-3 border-t border-slate-800 flex justify-between font-bold text-sm">
-                  <span>Tổng cộng:</span>
-                  <span className="text-blue-500">{order.totalAmount.toLocaleString()} đ</span>
+                <div className="pt-3 border-t border-slate-800 flex justify-between font-bold text-base">
+                  <span>Tổng thanh toán:</span>
+                  <span className="text-[#FF6B35]">{order.totalAmount.toLocaleString()} đ</span>
                 </div>
               </div>
             ))}
@@ -432,7 +466,7 @@ const CustomerMenu: React.FC = () => {
 
       {items.length > 0 && customerTab === 'menu' && (
         <div className="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none z-40">
-          <button onClick={() => setIsCartOpen(true)} className="pointer-events-auto bg-blue-600 w-full max-w-md py-4 rounded-3xl font-bold text-lg shadow-2xl flex justify-between px-6 items-center hover:bg-blue-500 transition active:scale-[0.98]">
+          <button onClick={() => setIsCartOpen(true)} className="pointer-events-auto bg-[#FF6B35] w-full max-w-md py-4 rounded-3xl font-bold text-lg shadow-2xl flex justify-between px-6 items-center hover:bg-[#E8541E] transition active:scale-[0.98]">
             <div className="flex items-center gap-2"><ShoppingBag /><span>{items.reduce((acc, i) => acc + i.quantity, 0)} {t.itemsCount}</span></div>
             <span>{getTotalPrice().toLocaleString()} đ</span>
           </button>
@@ -461,8 +495,8 @@ const CustomerMenu: React.FC = () => {
                   </div>
 
                   <div className="flex justify-between items-center pt-2 border-t border-slate-700/40">
-                    <span className="text-sm text-blue-400 font-extrabold">{item.price.toLocaleString()} đ</span>
-                    <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1">
+                    <span className="text-sm text-[#FF6B35] font-extrabold">{item.price.toLocaleString()} đ</span>
+                    <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1">
                       <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={12} /></button>
                       <input 
                         type="number" 
@@ -480,12 +514,12 @@ const CustomerMenu: React.FC = () => {
             <div className="mt-4 pt-6 border-t border-slate-800">
               <div className="flex justify-between text-2xl font-bold mb-6">
                 <span>{t.total}:</span>
-                <span className="text-blue-500">{getTotalPrice().toLocaleString()} đ</span>
+                <span className="text-[#FF6B35] font-bold">{getTotalPrice().toLocaleString()} đ</span>
               </div>
               <button 
                 onClick={submitOrder} 
                 disabled={isOrdering}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition disabled:bg-slate-800 flex items-center justify-center gap-2 active:scale-[0.98]"
+                className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition disabled:bg-slate-800 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <Check size={20} />
                 {isOrdering ? t.sending : t.confirmOrder}
@@ -520,7 +554,7 @@ const CustomerMenu: React.FC = () => {
                         onClick={() => setSelectedSizeOption(opt)}
                         className={`p-4 rounded-2xl border font-bold text-sm text-center transition ${
                           selectedSizeOption?.name === opt.name 
-                            ? 'bg-blue-600/10 border-blue-500 text-blue-500' 
+                            ? 'bg-[#FF6B35]/10 border-[#FF6B35] text-[#FF6B35]' 
                             : 'bg-slate-950 border-slate-800 text-slate-300'
                         }`}
                       >
@@ -546,11 +580,11 @@ const CustomerMenu: React.FC = () => {
                         >
                           <div className="flex flex-col">
                             <span className="font-bold text-sm text-white">{opt.name}</span>
-                            <span className="text-xs text-blue-500 font-bold">{opt.price < 0 ? `${opt.price.toLocaleString()} đ` : `+${opt.price.toLocaleString()} đ`}</span>
+                            <span className="text-xs text-[#FF6B35] font-bold">{opt.price < 0 ? `${opt.price.toLocaleString()} đ` : `+${opt.price.toLocaleString()} đ`}</span>
                           </div>
 
                           {qty > 0 ? (
-                            <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1 shadow-lg">
+                            <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1 shadow-lg">
                               <button type="button" onClick={() => updateToppingQty(opt.name, -1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Minus size={14} /></button>
                               <span className="font-extrabold text-sm w-4 text-center text-white">{qty}</span>
                               <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Plus size={14} /></button>
@@ -569,7 +603,7 @@ const CustomerMenu: React.FC = () => {
 
               <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
                 <span className="text-xs font-bold text-slate-400">CHỌN SỐ LƯỢNG MÓN CHÍNH:</span>
-                <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1">
+                <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1">
                   <button type="button" onClick={() => setCustomQty(prev => Math.max(1, prev - 1))} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Minus size={14} /></button>
                   <input 
                     type="number" 
@@ -584,7 +618,7 @@ const CustomerMenu: React.FC = () => {
 
             <button 
               onClick={handleConfirmCustomization}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition"
+              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition"
             >
               THÊM VÀO GIỎ HÀNG
             </button>

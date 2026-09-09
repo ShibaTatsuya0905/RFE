@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Receipt, Coins, QrCode, Printer, Table as TableIcon, X, Check, History, Clock, Bell } from 'lucide-react';
+import { Receipt, Coins, QrCode, Printer, Table as TableIcon, X, Check, History, Clock } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useOrderStore } from '../../store/useOrderStore';
 import { speakVietnamese } from '../../utils/speech';
@@ -84,9 +84,7 @@ const CashierDashboard: React.FC = () => {
           
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {activeTab === 'active' && orders.map(order => {
-              const billNotif = notifications.find(n => n.tableId === order.tableId && n.type === 'Bill');
               const isSelected = selectedOrder?.id === order.id;
-              
               return (
                 <div 
                   key={order.id} 
@@ -94,21 +92,15 @@ const CashierDashboard: React.FC = () => {
                   className={`p-4 cursor-pointer rounded-2xl border transition duration-200 ${
                     isSelected 
                       ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-900/30' 
-                      : billNotif 
-                        ? 'bg-yellow-500/10 border-yellow-500 shadow-lg shadow-yellow-500/20 animate-pulse'
-                        : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+                      : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <TableIcon size={18} className={billNotif && !isSelected ? 'text-yellow-500' : 'text-gray-400'} />
-                      <span className={`font-bold text-lg ${billNotif && !isSelected ? 'text-yellow-500' : ''}`}>{order.tableName}</span>
+                      <TableIcon size={18} className="text-gray-400" />
+                      <span className="font-bold text-lg">{order.tableName}</span>
                     </div>
-                    {billNotif && !isSelected ? (
-                      <span className="text-yellow-500 text-xs font-bold flex items-center gap-1"><Bell size={14} /> YÊU CẦU BILL</span>
-                    ) : (
-                      <span className="text-green-400 font-bold">{order.totalAmount.toLocaleString()} đ</span>
-                    )}
+                    <span className="text-green-400 font-bold">{order.totalAmount.toLocaleString()} đ</span>
                   </div>
                   <div className="flex justify-between text-xs text-gray-400">
                     <span>Mã đơn: {order.orderCode}</span>
@@ -145,13 +137,13 @@ const CashierDashboard: React.FC = () => {
               <div className="space-y-4 mb-6 border-t border-b border-gray-800 py-6 max-h-[300px] overflow-y-auto">
                 {selectedOrder.orderDetails.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
-                    <div className="flex-1">
+                    <div className="flex-1 pr-4">
                       <p className="font-semibold text-gray-200">{item.foodName}</p>
-                      {item.notes && <p className="text-xs text-blue-400 italic">{item.notes}</p>}
+                      {item.notes && <p className="text-xs text-blue-400 italic mt-1 bg-blue-500/10 p-1.5 rounded-xl border border-blue-500/20">{item.notes}</p>}
                     </div>
                     <div className="text-right">
                       <p className="text-gray-400">{item.quantity} x {item.unitPrice.toLocaleString()} đ</p>
-                      <p className="font-bold text-gray-200">{(item.quantity * item.unitPrice).toLocaleString()} đ</p>
+                      <p className="font-bold text-gray-200 mt-1">{(item.quantity * item.unitPrice).toLocaleString()} đ</p>
                     </div>
                   </div>
                 ))}
@@ -234,11 +226,14 @@ const CashierDashboard: React.FC = () => {
             <p className="text-[10px]">Giờ vào: {new Date(selectedOrder.createdAt).toLocaleString()}</p>
           </div>
           <div className="border-b border-dashed border-black my-2" />
-          <div className="space-y-1">
+          <div className="space-y-2">
             {selectedOrder.orderDetails.map((item) => (
-              <div key={item.id} className="flex justify-between">
-                <span>{item.quantity} x {item.foodName}</span>
-                <span className="font-semibold">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
+              <div key={item.id} className="border-b border-dashed border-gray-300 pb-1.5">
+                <div className="flex justify-between">
+                  <span>{item.quantity} x {item.foodName}</span>
+                  <span className="font-semibold">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
+                </div>
+                {item.notes && <p className="text-[9px] text-gray-600 italic mt-0.5">{item.notes}</p>}
               </div>
             ))}
           </div>
