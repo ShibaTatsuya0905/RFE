@@ -3,7 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { useOrderStore } from '../store/useOrderStore';
 import { speakVietnamese } from '../utils/speech';
 
-const HUB_URL = `http://${window.location.hostname}:5245/orderHub`;
+const HUB_URL = 'https://rbe-1gj9.onrender.com/orderHub';
 
 export const useSignalR = () => {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
