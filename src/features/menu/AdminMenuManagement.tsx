@@ -9,8 +9,6 @@ const AdminMenuManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showTrash, setShowTrash] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const pageSize = 6;
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,7 +29,7 @@ const AdminMenuManagement: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const url = showTrash ? '/foods/deleted' : `/foods?pageNumber=${currentPage}&pageSize=${pageSize}`;
+      const url = showTrash ? '/foods/deleted' : '/foods?pageSize=999';
       const [foodsRes, catsRes] = await Promise.all([
         apiClient.get(url),
         apiClient.get('/categories')
@@ -50,23 +48,13 @@ const AdminMenuManagement: React.FC = () => {
       setFoods(parsedFoods);
       setCategories(catsRes.data);
 
-      const paginationHeader = foodsRes.headers['x-pagination'] || foodsRes.headers['X-Pagination'];
-      if (paginationHeader && !showTrash) {
-        const meta = JSON.parse(paginationHeader);
-        setTotalPages(meta.TotalPages || 1);
-        setTotalCount(meta.TotalCount || parsedFoods.length);
-      } else {
-        setTotalPages(1);
-        setTotalCount(parsedFoods.length);
-      }
-
       if (catsRes.data.length > 0 && formData.categoryId === 0) {
         setFormData(prev => ({ ...prev, categoryId: catsRes.data[0].id }));
       }
     } catch (error) {}
   };
 
-  useEffect(() => { fetchData(); }, [showTrash, currentPage]);
+  useEffect(() => { fetchData(); }, [showTrash]);
 
   const handleOpenAdd = () => {
     setEditingFood(null);
@@ -188,9 +176,11 @@ const AdminMenuManagement: React.FC = () => {
   };
 
   const filteredFoods = foods.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const totalPages = Math.ceil(filteredFoods.length / pageSize) || 1;
+  const displayedFoods = filteredFoods.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">{showTrash ? 'Menu Trash Bin' : 'Menu Customization'}</h1>
@@ -218,12 +208,18 @@ const AdminMenuManagement: React.FC = () => {
 
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input type="text" placeholder="Search food items..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 text-sm text-white focus:outline-none focus:border-blue-500 transition duration-200" />
+        <input 
+          type="text" 
+          placeholder="Search food items..." 
+          value={searchTerm} 
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
+          className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 text-sm text-white focus:outline-none focus:border-blue-500 transition duration-200" 
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredFoods.map(food => (
-          <div key={food.id} className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 flex flex-col justify-between">
+        {displayedFoods.map(food => (
+          <div key={food.id} className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 flex flex-col justify-between hover:border-slate-700 transition duration-200 shadow-xl">
             <div className="flex gap-4">
               <div className="w-24 h-24 bg-slate-800 rounded-2xl flex items-center justify-center text-slate-500 shrink-0 overflow-hidden border border-slate-700/50">
                 {food.imageUrl ? <img src={food.imageUrl} className="w-full h-full object-cover" /> : <Utensils size={28} />}
@@ -246,14 +242,14 @@ const AdminMenuManagement: React.FC = () => {
             </div>
           </div>
         ))}
-        {filteredFoods.length === 0 && (
+        {displayedFoods.length === 0 && (
           <div className="col-span-3 text-center py-12 text-slate-500">No items found here.</div>
         )}
       </div>
 
       {!showTrash && (
-        <div className="flex justify-between items-center text-sm text-slate-400 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-          <span className="font-semibold">Showing Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span> (Total <span className="text-white">{totalCount}</span> items)</span>
+        <div className="flex justify-between items-center text-sm text-slate-400 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl">
+          <span className="font-semibold">Showing Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span> (Total <span className="text-white">{filteredFoods.length}</span> items)</span>
           <div className="flex gap-2">
             <button 
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -342,7 +338,7 @@ const AdminMenuManagement: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs text-slate-400 font-semibold block mb-1.5">Description</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none h-20 resize-none" />
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none h-16 resize-none" />
               </div>
 
               <div className="border-t border-slate-800/80 pt-4">
