@@ -50,7 +50,18 @@ const dictionary = {
   }
 };
 
-const sizeKeywords = ['tô', 'size', 'lớn', 'nhỏ', 'thường', 'đặc biệt', 'regular', 'large', 'small', 'special'];
+const isSizeOption = (name: string) => {
+  const lower = name.toLowerCase().trim();
+  const exactPatterns = [
+    /\btô\s+(lớn|nhỏ|vừa|đặc biệt|thường)\b/i,
+    /\bsize\s+[smlx]+/i,
+    /\b(size|cỡ)\s+(lớn|nhỏ|vừa)\b/i,
+    /\b(tô lớn|tô nhỏ|tô vừa|tô đặc biệt|tô thường)\b/i,
+    /\b(size l|size m|size s|size xl)\b/i,
+    /\b(regular|large|small|medium|special)\b/i
+  ];
+  return exactPatterns.some(pattern => pattern.test(lower));
+};
 
 const CustomerMenu: React.FC = () => {
   useSignalR();
@@ -95,7 +106,7 @@ const CustomerMenu: React.FC = () => {
     apiClient.get('/orders/active').then(res => setOrders(res.data));
 
     if (tableId) {
-      apiClient.get(`/tables/${tableId}`)
+      apiClient.get(`/tables/${tableId}` )
         .then(res => setTableName(res.data.name))
         .catch(() => setTableName(`Bàn ${tableId}`));
     }
@@ -141,17 +152,11 @@ const CustomerMenu: React.FC = () => {
 
   const handleAddClick = (food: any) => {
     if (food.options && food.options.length > 0) {
-      const rawSizes = food.options.filter((o: any) => 
-        sizeKeywords.some(k => o.name.toLowerCase().includes(k))
-      );
-      
+      const rawSizes = food.options.filter((o: any) => isSizeOption(o.name));
       const sizes = rawSizes.length > 0 
         ? [{ name: 'Tiêu chuẩn (Mặc định)', price: 0 }, ...rawSizes]
         : [];
-
-      const toppings = food.options.filter((o: any) => 
-        !sizeKeywords.some(k => o.name.toLowerCase().includes(k))
-      );
+      const toppings = food.options.filter((o: any) => !isSizeOption(o.name));
 
       setCustomizingFood(food);
       setSizeOptions(sizes);
@@ -444,21 +449,29 @@ const CustomerMenu: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-1">
               {items.map(item => (
-                <div key={item.cartItemId} className="flex justify-between items-center bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50">
-                  <div className="flex-1 pr-4">
-                    <h3 className="font-bold text-slate-100 text-lg leading-tight">{item.foodName}</h3>
-                    {item.notes && <p className="text-xs text-slate-400 mt-1 italic">{item.notes}</p>}
-                    <p className="text-sm text-blue-500 font-bold mt-1.5">{item.price.toLocaleString()} đ</p>
+                <div key={item.cartItemId} className="bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 pr-4">
+                      <h3 className="font-bold text-slate-100 text-lg leading-tight">{item.foodName}</h3>
+                      {item.notes && <p className="text-xs text-blue-400 mt-1.5 font-medium leading-relaxed bg-blue-500/10 p-2 rounded-xl border border-blue-500/20">{item.notes}</p>}
+                    </div>
+                    <button onClick={() => updateQuantity(item.cartItemId, 0)} className="text-red-500 text-xs font-bold bg-red-500/10 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition">
+                      {t.delete}
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1">
-                    <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={12} /></button>
-                    <input 
-                      type="number" 
-                      value={item.quantity} 
-                      onChange={(e) => updateQuantity(item.cartItemId, Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-10 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <button onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={12} /></button>
+
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-700/40">
+                    <span className="text-sm text-blue-400 font-extrabold">{item.price.toLocaleString()} đ</span>
+                    <div className="flex items-center gap-2.5 bg-blue-600 rounded-2xl p-1">
+                      <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={12} /></button>
+                      <input 
+                        type="number" 
+                        value={item.quantity} 
+                        onChange={(e) => updateQuantity(item.cartItemId, Math.max(0, parseInt(e.target.value) || 0))}
+                        className="w-10 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={12} /></button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -544,7 +557,8 @@ const CustomerMenu: React.FC = () => {
                             </div>
                           ) : (
                             <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-slate-300 transition">
-                              <Plus size={14} /></button>
+                              <Plus size={14} />
+                            </button>
                           )}
                         </div>
                       );
