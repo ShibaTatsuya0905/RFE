@@ -7,7 +7,7 @@ import type { Order } from '../../types';
 
 const OrdersManagement: React.FC = () => {
   useSignalR();
-  const { orders, setOrders, updateOrderStatus } = useOrderStore();
+  const { orders, setOrders } = useOrderStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
