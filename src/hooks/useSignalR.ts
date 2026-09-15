@@ -23,15 +23,9 @@ export const useSignalR = () => {
   useEffect(() => {
     if (connection) {
       connection.start().then(() => {
-        
         connection.on('ReceiveNewOrder', (newOrder: any) => {
           addOrder(newOrder);
-          const userStr = localStorage.getItem('user');
-          const role = userStr ? JSON.parse(userStr).role : '';
-          
-          if (['Chef', 'Waiter', 'Admin'].includes(role)) {
-            speakVietnamese(`${newOrder.tableName} vừa đặt món mới`);
-          }
+          speakVietnamese(`${newOrder.tableName} vừa đặt món mới`);
         });
 
         connection.on('OrderStatusUpdated', (id: number, status: string) => {
@@ -40,21 +34,17 @@ export const useSignalR = () => {
 
         connection.on('ReceiveTableCall', (tableId: number, tableName: string, type: string) => {
           addNotification({ id: Date.now(), tableId, tableName, type });
-          
-          const userStr = localStorage.getItem('user');
-          const role = userStr ? JSON.parse(userStr).role : '';
 
-          if (type === 'Bill' && ['Cashier', 'Waiter', 'Admin'].includes(role)) {
+          if (type === 'Bill') {
             speakVietnamese(`${tableName} yêu cầu thanh toán`);
-          } else if (type === 'Assistance' && ['Waiter', 'Admin'].includes(role)) {
-            speakVietnamese(`${tableName} gọi phục vụ`);
+          } else {
+            speakVietnamese(`${tableName} gọi nhân viên phục vụ`);
           }
         });
 
         connection.on('TableStatusUpdated', (tableId: number, status: number) => {
           updateTableStatus(tableId, status);
         });
-
       }).catch(err => console.error(err));
     }
     return () => {
@@ -62,7 +52,7 @@ export const useSignalR = () => {
         connection.stop();
       }
     };
-  }, [connection, addOrder, updateOrderStatus, addNotification, updateTableStatus]);
+  }, [connection]);
 
   return { connection };
 };
