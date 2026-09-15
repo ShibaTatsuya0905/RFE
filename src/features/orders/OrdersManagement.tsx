@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, SlidersHorizontal, Eye, Printer, X, CheckCircle2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, SlidersHorizontal, Eye, Printer, X, CheckCircle2, Clock, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
@@ -11,17 +11,32 @@ const OrdersManagement: React.FC = () => {
   const { orders, setOrders } = useOrderStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [viewScope, setViewScope] = useState<'all' | 'active'>('all'); // Tab xem: Toàn bộ hoặc Chỉ đơn đang mở
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const itemsPerPage = 8;
 
-  useEffect(() => {
+  const fetchOrders = () => {
     setLoading(true);
-    apiClient.get('/orders/active')
-      .then(res => setOrders(res.data))
+    const endpoint = viewScope === 'active' ? '/orders/active' : '/orders?pageSize=999';
+
+    apiClient.get(endpoint)
+      .then(res => {
+        const orderList = Array.isArray(res.data) 
+          ? res.data 
+          : (res.data?.items || res.data?.data || []);
+        setOrders(orderList);
+      })
+      .catch(err => {
+        console.error('Lỗi tải danh sách đơn:', err);
+      })
       .finally(() => setLoading(false));
-  }, [setOrders]);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [viewScope, setOrders]);
 
   const handleUpdateStatus = async (orderId: number, nextStatus: number) => {
     try {
@@ -32,6 +47,7 @@ const OrdersManagement: React.FC = () => {
         const updated = { ...selectedOrder, status: getStatusString(nextStatus) };
         setSelectedOrder(updated);
       }
+      fetchOrders(); 
     } catch (error) {
       alert('Error updating status');
     }
@@ -51,6 +67,7 @@ const OrdersManagement: React.FC = () => {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Paid':
+        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
       case 'Served':
         return 'bg-green-500/10 text-green-500 border border-green-500/20';
       case 'Cooking':
@@ -62,10 +79,12 @@ const OrdersManagement: React.FC = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
+  const filteredOrders = safeOrders.filter(order => {
     const matchesSearch = 
-      order.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.tableName.toLowerCase().includes(searchTerm.toLowerCase());
+      (order.orderCode || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.tableName || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -73,16 +92,32 @@ const OrdersManagement: React.FC = () => {
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  if (loading && orders.length === 0) {
+  if (loading && safeOrders.length === 0) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Orders Management</h1>
           <p className="text-slate-400 text-sm mt-1">Manage and track all dining transactions</p>
+        </div>
+
+        {/* Nút chuyển nhanh giữa Đơn đang phục vụ và Lịch sử tất cả đơn */}
+        <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl">
+          <button
+            onClick={() => { setViewScope('all'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition ${viewScope === 'all' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+          >
+            All History
+          </button>
+          <button
+            onClick={() => { setViewScope('active'); setCurrentPage(1); }}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition ${viewScope === 'active' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+          >
+            Active Only
+          </button>
         </div>
       </div>
 
@@ -105,11 +140,12 @@ const OrdersManagement: React.FC = () => {
             className="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm text-white appearance-none focus:outline-none focus:border-blue-500 transition"
           >
             <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Cooking">Preparing</option>
-            <option value="Ready">Ready</option>
-            <option value="Served">Served</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Pending">Pending (Chờ duyệt)</option>
+            <option value="Cooking">Preparing (Đang nấu)</option>
+            <option value="Ready">Ready (Sẵn sàng)</option>
+            <option value="Served">Served (Đã lên món)</option>
+            <option value="Paid">Paid (Đã thanh toán)</option>
+            <option value="Cancelled">Cancelled (Đã hủy)</option>
           </select>
         </div>
       </div>
@@ -159,6 +195,7 @@ const OrdersManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Pagination */}
       <div className="flex justify-between items-center text-sm text-slate-400 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl">
         <span className="font-semibold">Showing Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span> (Total <span className="text-white">{filteredOrders.length}</span> orders)</span>
         <div className="flex gap-2">
@@ -188,6 +225,7 @@ const OrdersManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/70 z-50 flex justify-end backdrop-blur-sm">
           <div className="bg-slate-900 w-full max-w-lg h-full border-l border-slate-800 p-6 flex flex-col justify-between animate-slide-up shadow-2xl">
@@ -206,7 +244,7 @@ const OrdersManagement: React.FC = () => {
               </div>
 
               <div className="space-y-4 mb-6 max-h-[45vh] overflow-y-auto pr-1">
-                {selectedOrder.orderDetails.map((item) => (
+                {(selectedOrder.orderDetails || []).map((item) => (
                   <div key={item.id} className="flex justify-between text-sm bg-slate-950 p-4 rounded-2xl border border-slate-800/40">
                     <div>
                       <h4 className="font-bold text-white text-base">{item.foodName}</h4>

@@ -16,19 +16,37 @@ const CashierDashboard: React.FC = () => {
   const [orderHistory, setOrderHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  // Lấy các đơn đang phục vụ
+  const fetchActiveOrders = () => {
     setLoading(true);
     apiClient.get('/orders/active')
-      .then(res => setOrders(res.data))
+      .then(res => {
+        const list = Array.isArray(res.data) ? res.data : (res.data?.items || res.data?.data || []);
+        setOrders(list);
+      })
+      .catch(err => console.error('Lỗi lấy đơn active:', err))
       .finally(() => setLoading(false));
-  }, [setOrders]);
+  };
 
+  // SỬA: Lấy lịch sử từ /orders để lấy cả đơn đã thanh toán (Paid)
   const fetchHistory = async () => {
     try {
-      const { data } = await apiClient.get('/orders/active');
-      setOrderHistory(data);
-    } catch (error) {}
+      const res = await apiClient.get('/orders?pageSize=999');
+      const list = Array.isArray(res.data) ? res.data : (res.data?.items || res.data?.data || []);
+      
+      // Sắp xếp đơn mới nhất lên trên cùng
+      const sorted = [...list].sort((a: any, b: any) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setOrderHistory(sorted);
+    } catch (error) {
+      console.error('Lỗi lấy lịch sử đơn hàng:', error);
+    }
   };
+
+  useEffect(() => {
+    fetchActiveOrders();
+  }, [setOrders]);
 
   useEffect(() => {
     if (activeTab === 'history') {
@@ -43,11 +61,19 @@ const CashierDashboard: React.FC = () => {
         headers: { 'Content-Type': 'application/json' }
       });
       
-      speakVietnamese(`Thanh toán thành công ${selectedOrder.tableName}`);
+      try {
+        speakVietnamese(`Thanh toán thành công ${selectedOrder.tableName}`);
+      } catch (e) {
+        console.error(e);
+      }
       
+      // Xóa khỏi danh sách đơn đang phục vụ
       setOrders(orders.filter(o => o.id !== selectedOrder.id));
       setSelectedOrder(null);
       setIsQrModalOpen(false);
+
+      // Cập nhật lại lịch sử nếu đang mở hoặc sau này mở
+      fetchHistory();
     } catch (error) {
       alert('Lỗi khi thanh toán!');
     }
@@ -68,6 +94,7 @@ const CashierDashboard: React.FC = () => {
   return (
     <>
       <div className="flex h-screen bg-black text-white font-sans overflow-hidden print:hidden">
+        {/* Sidebar bên trái: Danh sách đơn */}
         <div className="w-96 bg-gray-900 border-r border-slate-800 flex flex-col">
           <div className="p-6 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -76,12 +103,13 @@ const CashierDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Tab chuyển đổi */}
           <div className="flex border-b border-slate-800 bg-slate-950/50 p-2 gap-2">
             <button 
               onClick={() => setActiveTab('active')} 
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition ${activeTab === 'active' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
             >
-              Đang phục vụ
+              Đang phục vụ ({orders.length})
             </button>
             <button 
               onClick={() => setActiveTab('history')} 
@@ -92,6 +120,7 @@ const CashierDashboard: React.FC = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Danh sách Đang phục vụ */}
             {activeTab === 'active' && orders.map(order => {
               const isSelected = selectedOrder?.id === order.id;
               return (
@@ -119,21 +148,44 @@ const CashierDashboard: React.FC = () => {
               );
             })}
 
+            {activeTab === 'active' && orders.length === 0 && (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                Không có bàn nào đang hoạt động
+              </div>
+            )}
+
+            {/* Danh sách Lịch sử đơn hàng */}
             {activeTab === 'history' && orderHistory.map(order => (
-              <div key={order.id} className="p-4 rounded-2xl border bg-slate-900 border-slate-800 opacity-80">
+              <div key={order.id} className="p-4 rounded-2xl border bg-slate-900 border-slate-800 hover:border-slate-700 transition">
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-bold text-white">{order.tableName}</span>
-                  <span className="text-slate-300 font-bold">{order.totalAmount.toLocaleString()} đ</span>
+                  <span className="text-emerald-400 font-bold">{order.totalAmount.toLocaleString()} đ</span>
                 </div>
                 <div className="space-y-1 text-xs text-slate-400 border-t border-slate-800 pt-2 mt-2">
-                  <p className="flex items-center gap-1"><Clock size={12} /> Tạo lúc: {new Date(order.createdAt).toLocaleTimeString()} - {new Date(order.createdAt).toLocaleDateString()}</p>
-                  <p>Mã: {order.orderCode} • Trạng thái: <span className="text-blue-400 font-semibold">{order.status}</span></p>
+                  <p className="flex items-center gap-1">
+                    <Clock size={12} /> {new Date(order.createdAt).toLocaleTimeString()} - {new Date(order.createdAt).toLocaleDateString()}
+                  </p>
+                  <div className="flex justify-between items-center mt-1">
+                    <span>Mã: {order.orderCode}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      order.status === 'Paid' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
+
+            {activeTab === 'history' && orderHistory.length === 0 && (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                Chưa có lịch sử đơn nào
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Khung thanh toán chi tiết bên phải */}
         <div className="flex-1 bg-black p-8 flex items-center justify-center">
           {selectedOrder ? (
             <div className="bg-gray-900 p-8 rounded-3xl w-full max-w-xl border border-gray-800 shadow-2xl animate-fade-in">
@@ -144,7 +196,7 @@ const CashierDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-4 mb-6 border-t border-b border-gray-800 py-6 max-h-[300px] overflow-y-auto">
-                {selectedOrder.orderDetails.map((item) => (
+                {(selectedOrder.orderDetails || []).map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
                     <div className="flex-1 pr-4">
                       <p className="font-semibold text-gray-200">{item.foodName}</p>
@@ -165,11 +217,11 @@ const CashierDashboard: React.FC = () => {
 
               <div className="space-y-3">
                 <div className="flex gap-4">
-                  <button onClick={() => handlePay('Cash')} className="flex-1 bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition">
+                  <button onClick={() => handlePay('Cash')} className="flex-1 bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition active:scale-95">
                     <Coins size={20} />
                     Tiền mặt
                   </button>
-                  <button onClick={() => setIsQrModalOpen(true)} className="flex-1 bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition">
+                  <button onClick={() => setIsQrModalOpen(true)} className="flex-1 bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition active:scale-95">
                     <QrCode size={20} />
                     Mã QR
                   </button>
@@ -188,6 +240,7 @@ const CashierDashboard: React.FC = () => {
           )}
         </div>
 
+        {/* Modal Quét mã QR */}
         {isQrModalOpen && selectedOrder && (
           <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-md">
             <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[32px] p-8 shadow-2xl relative text-center animate-slide-up">
@@ -214,7 +267,7 @@ const CashierDashboard: React.FC = () => {
 
               <button 
                 onClick={() => handlePay('QrCode')}
-                className="w-full bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition"
+                className="w-full bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition active:scale-95"
               >
                 <Check size={18} /> XÁC NHẬN ĐÃ NHẬN TIỀN
               </button>
@@ -223,6 +276,7 @@ const CashierDashboard: React.FC = () => {
         )}
       </div>
 
+      {/* Bản in Hóa đơn (Chỉ xuất hiện khi bấm In hóa đơn) */}
       {selectedOrder && (
         <div className="hidden print:block w-[80mm] mx-auto bg-white text-black p-4 font-mono text-xs leading-tight">
           <div className="text-center mb-3">
@@ -236,7 +290,7 @@ const CashierDashboard: React.FC = () => {
           </div>
           <div className="border-b border-dashed border-black my-2" />
           <div className="space-y-2">
-            {selectedOrder.orderDetails.map((item) => (
+            {(selectedOrder.orderDetails || []).map((item) => (
               <div key={item.id} className="border-b border-dashed border-gray-300 pb-1.5">
                 <div className="flex justify-between">
                   <span>{item.quantity} x {item.foodName}</span>
