@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Plus, Minus, X, Check, Utensils, Bell, Receipt, ArrowLeft, Languages, ClipboardList } from 'lucide-react';
+import { ShoppingBag, Plus, Minus, X, Check, Utensils, Bell, Receipt, ArrowLeft, Languages, Sparkles, ClipboardList } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useCartStore } from '../../store/useCartStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -14,7 +14,7 @@ const dictionary = {
     callWaiter: 'GỌI PHỤC VỤ',
     requestBill: 'GỌI THANH TOÁN',
     cart: 'Giỏ hàng của bạn',
-    total: 'Tổng tiền',
+    total: 'Tổng thanh toán',
     confirmOrder: 'XÁC NHẬN ĐẶT MÓN',
     sending: 'ĐANG GỬI ĐƠN...',
     noFood: 'Thực đơn đang được cập nhật...',
@@ -267,7 +267,7 @@ const CustomerMenu: React.FC = () => {
   const LanguageSwitcher = () => (
     <button
       onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
-      className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-slate-300 hover:text-white transition"
+      className="flex items-center gap-2 px-3.5 py-2 bg-white border border-stone-200 shadow-sm rounded-2xl text-xs font-bold text-stone-700 hover:text-stone-900 transition active:scale-95"
     >
       <Languages size={14} className="text-[#FF6B35]" />
       <span>{lang === 'vi' ? 'EN' : 'VI'}</span>
@@ -276,42 +276,46 @@ const CustomerMenu: React.FC = () => {
 
   if (view === 'portal') {
     return (
-      <div className="min-h-screen bg-[#0B1120] text-white font-sans flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute w-80 h-80 bg-[#FF6B35]/10 rounded-full blur-[100px] -top-20 -left-20 animate-pulse" />
-        <div className="absolute w-80 h-80 bg-purple-500/5 rounded-full blur-[100px] -bottom-20 -right-20" />
+      <div className="min-h-screen bg-[#FAF7F2] text-stone-900 font-sans flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute w-96 h-96 bg-[#FF6B35]/10 rounded-full blur-[100px] -top-20 -left-20 animate-pulse" />
+        <div className="absolute w-96 h-96 bg-[#2D6A4F]/10 rounded-full blur-[100px] -bottom-20 -right-20" />
 
-        <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800 p-8 rounded-[36px] shadow-2xl z-10 text-center relative">
+        <div className="w-full max-w-md bg-white/90 backdrop-blur-xl border border-stone-200/80 p-8 rounded-[40px] shadow-2xl shadow-stone-300/40 z-10 text-center relative">
           <div className="absolute top-6 right-6">
             <LanguageSwitcher />
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-wider text-[#FF6B35] mb-2 mt-6">RESTAURANT</h1>
-          <p className="text-lg font-bold text-white mb-8">{tableName || `Bàn ${tableId}`}</p>
+          <div className="w-16 h-16 rounded-3xl bg-[#FF6B35] flex items-center justify-center shadow-xl shadow-[#FF6B35]/25 mx-auto mb-4 text-white mt-6">
+            <Sparkles size={30} />
+          </div>
 
-          <div className="space-y-4">
+          <h1 className="text-3xl font-extrabold tracking-widest text-[#FF6B35] mb-1">RESTAURANT</h1>
+          <p className="text-lg font-bold text-stone-800 mb-8">{tableName || `Bàn ${tableId}`}</p>
+
+          <div className="space-y-3.5">
             <button 
               onClick={() => setView('menu')}
-              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition shadow-lg shadow-[#FF6B35]/20 active:scale-[0.98]"
+              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white py-4.5 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition shadow-lg shadow-[#FF6B35]/25 active:scale-[0.98]"
             >
-              <Utensils size={22} />
+              <Utensils size={20} />
               {t.browseMenu}
             </button>
 
             <button 
               disabled={isCalling}
               onClick={() => handleCallService('Assistance')}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-yellow-500"
+              className="w-full bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 py-4.5 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition shadow-sm active:scale-[0.98]"
             >
-              <Bell size={22} />
+              <Bell size={20} className="text-[#F59E0B]" />
               {t.callWaiter}
             </button>
 
             <button 
               disabled={isCalling}
               onClick={() => handleCallService('Bill')}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition active:scale-[0.98] text-green-500"
+              className="w-full bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 py-4.5 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition shadow-sm active:scale-[0.98]"
             >
-              <Receipt size={22} />
+              <Receipt size={20} className="text-[#2D6A4F]" />
               {t.requestBill}
             </button>
           </div>
@@ -321,82 +325,97 @@ const CustomerMenu: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans flex justify-center pb-28">
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 font-sans flex justify-center pb-28">
       <div className="w-full max-w-md p-4 relative">
-        <div className="flex justify-between items-center mb-4 pt-4">
+        <div className="flex justify-between items-center mb-4 pt-2">
           <div className="flex items-center gap-3">
-            <button onClick={() => setView('portal')} className="p-2.5 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 transition">
+            <button onClick={() => setView('portal')} className="p-2.5 bg-white border border-stone-200 shadow-sm rounded-2xl text-stone-700 hover:text-stone-900 transition active:scale-95">
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-[#FF6B35]">{t.back}</h1>
-              <p className="text-xs text-slate-400 font-semibold">{tableName || `Bàn ${tableId}`}</p>
+              <h1 className="text-xl font-bold text-[#FF6B35] leading-none">{t.back}</h1>
+              <p className="text-xs text-stone-500 font-semibold mt-1">{tableName || `Bàn ${tableId}`}</p>
             </div>
           </div>
           <LanguageSwitcher />
         </div>
 
-        <div className="flex border border-slate-800 bg-slate-900 rounded-2xl p-1 mb-6">
+        <div className="flex border border-stone-200/90 bg-stone-100/80 rounded-2xl p-1 mb-6 shadow-inner">
           <button 
             onClick={() => setCustomerTab('menu')}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition ${customerTab === 'menu' ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition ${customerTab === 'menu' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'}`}
           >
             {t.menuTab}
           </button>
           <button 
             onClick={() => setCustomerTab('history')}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${customerTab === 'history' ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20' : 'text-slate-400 hover:text-white'}`}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${customerTab === 'history' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'}`}
           >
-            <ClipboardList size={14} /> {t.historyTab} ({tableOrders.length})
+            <ClipboardList size={14} className="text-[#2D6A4F]" /> {t.historyTab} ({tableOrders.length})
           </button>
         </div>
 
         {customerTab === 'menu' && (
           <>
             {categories.length > 0 && (
-              <div className="sticky top-0 z-30 bg-black/90 backdrop-blur-md py-3.5 -mx-4 px-4 flex overflow-x-auto gap-2.5 no-scrollbar border-b border-slate-800/80">
+              <div className="sticky top-0 z-30 bg-[#FAF7F2]/95 backdrop-blur-md py-3 -mx-4 px-4 flex overflow-x-auto gap-2.5 no-scrollbar border-b border-stone-200">
                 {categories.map((cat) => (
-                  <button key={cat} onClick={() => scrollToCategory(cat)} className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-bold text-xs tracking-tight transition-all duration-300 ${activeCategory === cat ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/20 scale-[1.02]' : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white'}`}>{cat}</button>
+                  <button 
+                    key={cat} 
+                    onClick={() => scrollToCategory(cat)} 
+                    className={`whitespace-nowrap px-5 py-2.5 rounded-2xl font-bold text-xs tracking-tight transition-all duration-300 ${
+                      activeCategory === cat 
+                        ? 'bg-[#2D6A4F] text-white shadow-md shadow-[#2D6A4F]/20 scale-[1.02]' 
+                        : 'bg-white border border-stone-200 text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    {cat}
+                  </button>
                 ))}
               </div>
             )}
 
-            <div className="mt-6">
+            <div className="mt-5">
               {categories.map(category => (
-                <div key={category} id={`category-${category}`} className="mb-10 pt-2">
-                  <h2 className="text-2xl font-extrabold text-white mb-5 flex items-center gap-2 tracking-tight">{category}</h2>
-                  <div className="space-y-4">
+                <div key={category} id={`category-${category}`} className="mb-8 pt-2">
+                  <h2 className="text-xl font-extrabold text-[#2D6A4F] mb-4 flex items-center gap-2 tracking-tight">
+                    <span className="w-2 h-2 rounded-full bg-[#2D6A4F]" />
+                    {category}
+                  </h2>
+                  <div className="space-y-3.5">
                     {groupedFoods[category].map((food: any) => {
                       const quantity = getCartItemQuantity(food.id);
                       const isCustomizable = food.options && food.options.length > 0;
                       return (
-                        <div key={food.id} className="bg-slate-900 rounded-3xl p-4 flex gap-4 items-center border border-gray-800 shadow-md animate-fade-in">
-                          <div className="w-24 h-24 bg-slate-800 rounded-2xl flex-shrink-0 flex items-center justify-center text-xs text-gray-500 overflow-hidden border border-slate-800 relative">
-                            {food.imageUrl ? <img src={food.imageUrl} className="w-full h-full object-cover" /> : <Utensils size={24} />}
+                        <div key={food.id} className="bg-white rounded-3xl p-3.5 flex gap-4 items-center border border-stone-200/80 shadow-sm shadow-stone-200/50 hover:shadow-md transition-all duration-300">
+                          <div className="w-24 h-24 bg-stone-100 rounded-2xl flex-shrink-0 flex items-center justify-center text-xs text-stone-400 overflow-hidden border border-stone-200/60 relative">
+                            {food.imageUrl ? <img src={food.imageUrl} className="w-full h-full object-cover" /> : <Utensils size={24} className="text-stone-400" />}
                             {food.price > 40000 && (
-                              <span className="absolute top-1.5 left-1.5 bg-[#FF6B35] text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider shadow-md">BEST SELLER</span>
+                              <span className="absolute top-1.5 left-1.5 bg-[#F59E0B] text-white text-[9px] font-bold px-2 py-0.5 rounded-full tracking-wider shadow-sm">
+                                HOT
+                              </span>
                             )}
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg text-slate-100 leading-tight">{food.name}</h3>
-                            {food.description && <p className="text-xs text-slate-400 mt-1 line-clamp-2">{food.description}</p>}
-                            <p className="text-[#FF6B35] font-extrabold text-lg mt-2">{food.price.toLocaleString()} đ</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-base text-stone-900 leading-snug truncate">{food.name}</h3>
+                            {food.description && <p className="text-xs text-stone-500 mt-0.5 line-clamp-2 leading-relaxed">{food.description}</p>}
+                            <p className="text-[#E8541E] font-extrabold text-base mt-2">{food.price.toLocaleString()} đ</p>
                           </div>
                           
                           {quantity > 0 && !isCustomizable ? (
-                            <div className="flex items-center gap-2 bg-[#FF6B35] rounded-2xl p-1 shadow-lg shadow-[#FF6B35]/10">
-                              <button onClick={() => updateQuantity(food.id.toString(), quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={14} /></button>
+                            <div className="flex items-center gap-1.5 bg-[#FF6B35] rounded-2xl p-1 shadow-md shadow-[#FF6B35]/20">
+                              <button onClick={() => updateQuantity(food.id.toString(), quantity - 1)} className="p-1.5 text-white hover:bg-black/10 rounded-xl transition active:scale-90"><Minus size={13} /></button>
                               <input 
                                 type="number" 
                                 value={quantity} 
                                 onChange={(e) => updateQuantity(food.id.toString(), Math.max(0, parseInt(e.target.value) || 0))}
-                                className="w-12 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-8 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               />
-                              <button onClick={() => updateQuantity(food.id.toString(), quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={14} /></button>
+                              <button onClick={() => updateQuantity(food.id.toString(), quantity + 1)} className="p-1.5 text-white hover:bg-black/10 rounded-xl transition active:scale-90"><Plus size={13} /></button>
                             </div>
                           ) : (
-                            <button onClick={() => handleAddClick(food)} className="bg-[#FF6B35] hover:bg-[#E8541E] p-3 rounded-2xl transition duration-200 shadow-lg shadow-[#FF6B35]/20 active:scale-90">
-                              <Plus size={20} />
+                            <button onClick={() => handleAddClick(food)} className="bg-[#FF6B35] hover:bg-[#E8541E] text-white p-3 rounded-2xl transition duration-200 shadow-md shadow-[#FF6B35]/20 active:scale-90">
+                              <Plus size={18} />
                             </button>
                           )}
                         </div>
@@ -407,9 +426,9 @@ const CustomerMenu: React.FC = () => {
               ))}
 
               {foods.length === 0 && (
-                <div className="text-center py-20">
-                  <Utensils size={48} className="mx-auto text-slate-700 mb-4" />
-                  <p className="text-slate-500 font-semibold">{t.noFood}</p>
+                <div className="text-center py-20 bg-white rounded-3xl border border-stone-200">
+                  <Utensils size={40} className="mx-auto text-stone-300 mb-3" />
+                  <p className="text-stone-500 font-semibold text-sm">{t.noFood}</p>
                 </div>
               )}
             </div>
@@ -417,47 +436,47 @@ const CustomerMenu: React.FC = () => {
         )}
 
         {customerTab === 'history' && (
-          <div className="space-y-4 mt-4 animate-fade-in">
+          <div className="space-y-4 mt-2 animate-fade-in">
             {tableOrders.map(order => (
-              <div key={order.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div key={order.id} className="bg-white border border-stone-200/90 rounded-3xl p-5 shadow-sm space-y-3">
+                <div className="flex justify-between items-center border-b border-stone-100 pb-3">
                   <div>
-                    <h3 className="font-extrabold text-white text-base">{order.orderCode}</h3>
-                    <p className="text-xs text-slate-400">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                    <h3 className="font-extrabold text-stone-900 text-base">{order.orderCode}</h3>
+                    <p className="text-xs text-stone-400">{new Date(order.createdAt).toLocaleTimeString()}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    order.status === 'Paid' || order.status === 'Served' ? 'bg-green-500/10 text-green-500' :
-                    order.status === 'Cooking' ? 'bg-blue-500/10 text-blue-400' : 'bg-yellow-500/10 text-yellow-500'
+                    order.status === 'Paid' || order.status === 'Served' ? 'bg-emerald-100 text-[#2D6A4F]' :
+                    order.status === 'Cooking' ? 'bg-orange-100 text-[#E8541E]' : 'bg-amber-100 text-[#F59E0B]'
                   }`}>
                     {order.status}
                   </span>
                 </div>
-                <div className="space-y-3">
-                  {order.orderDetails.map(item => (
-                    <div key={item.id} className="text-sm text-slate-200 border-b border-slate-800/40 pb-2">
+                <div className="space-y-2.5">
+                  {order.orderDetails.map((item: any) => (
+                    <div key={item.id} className="text-sm text-stone-700 border-b border-stone-100 pb-2 last:border-none">
                       <div className="flex justify-between font-semibold">
                         <span>{item.quantity} x {item.foodName}</span>
-                        <span className="text-[#FF6B35]">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
+                        <span className="text-[#E8541E]">{(item.quantity * item.unitPrice).toLocaleString()} đ</span>
                       </div>
                       {item.notes && (
-                        <p className="text-xs text-blue-400 mt-1 font-medium bg-blue-500/10 p-2 rounded-xl border border-blue-500/20">
+                        <p className="text-xs text-[#2D6A4F] mt-1 font-medium bg-emerald-50 p-2 rounded-xl border border-emerald-100">
                           {item.notes}
                         </p>
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="pt-3 border-t border-slate-800 flex justify-between font-bold text-base">
-                  <span>Tổng thanh toán:</span>
-                  <span className="text-[#FF6B35]">{order.totalAmount.toLocaleString()} đ</span>
+                <div className="pt-3 border-t border-stone-100 flex justify-between font-bold text-base">
+                  <span className="text-stone-800">{t.total}:</span>
+                  <span className="text-[#E8541E]">{order.totalAmount.toLocaleString()} đ</span>
                 </div>
               </div>
             ))}
 
             {tableOrders.length === 0 && (
-              <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800 border-dashed">
-                <ClipboardList size={48} className="mx-auto text-slate-600 mb-4" />
-                <p className="text-slate-500 text-sm font-semibold">{t.noHistory}</p>
+              <div className="text-center py-20 bg-white rounded-3xl border border-stone-200 border-dashed">
+                <ClipboardList size={40} className="mx-auto text-stone-300 mb-3" />
+                <p className="text-stone-500 text-sm font-semibold">{t.noHistory}</p>
               </div>
             )}
           </div>
@@ -466,60 +485,65 @@ const CustomerMenu: React.FC = () => {
 
       {items.length > 0 && customerTab === 'menu' && (
         <div className="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none z-40">
-          <button onClick={() => setIsCartOpen(true)} className="pointer-events-auto bg-[#FF6B35] w-full max-w-md py-4 rounded-3xl font-bold text-lg shadow-2xl flex justify-between px-6 items-center hover:bg-[#E8541E] transition active:scale-[0.98]">
-            <div className="flex items-center gap-2"><ShoppingBag /><span>{items.reduce((acc, i) => acc + i.quantity, 0)} {t.itemsCount}</span></div>
-            <span>{getTotalPrice().toLocaleString()} đ</span>
+          <button onClick={() => setIsCartOpen(true)} className="pointer-events-auto bg-[#FF6B35] hover:bg-[#E8541E] text-white w-full max-w-md py-4 rounded-3xl font-bold text-base shadow-xl shadow-[#FF6B35]/30 flex justify-between px-6 items-center transition active:scale-[0.98]">
+            <div className="flex items-center gap-2.5">
+              <ShoppingBag size={20} />
+              <span>{items.reduce((acc, i) => acc + i.quantity, 0)} {t.itemsCount}</span>
+            </div>
+            <span className="text-lg">{getTotalPrice().toLocaleString()} đ</span>
           </button>
         </div>
       )}
 
       {isCartOpen && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col justify-end backdrop-blur-sm">
-          <div className="bg-slate-900 w-full max-w-md mx-auto h-[85vh] rounded-t-[40px] p-6 flex flex-col animate-slide-up border-t border-slate-800 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md mx-auto h-[85vh] rounded-t-[40px] p-6 flex flex-col animate-slide-up shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold tracking-tight">{t.cart}</h2>
-              <button onClick={() => setIsCartOpen(false)} className="p-3 bg-slate-800 rounded-full hover:bg-slate-700 transition"><X size={20} /></button>
+              <h2 className="text-2xl font-bold tracking-tight text-stone-900">{t.cart}</h2>
+              <button onClick={() => setIsCartOpen(false)} className="p-2.5 bg-stone-100 rounded-full hover:bg-stone-200 text-stone-600 transition">
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            <div className="flex-1 overflow-y-auto space-y-3.5 pr-1">
               {items.map(item => (
-                <div key={item.cartItemId} className="bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50 space-y-3">
+                <div key={item.cartItemId} className="bg-[#FAF7F2] p-4 rounded-3xl border border-stone-200/80 space-y-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 pr-4">
-                      <h3 className="font-bold text-slate-100 text-lg leading-tight">{item.foodName}</h3>
-                      {item.notes && <p className="text-xs text-blue-400 mt-1.5 font-medium leading-relaxed bg-blue-500/10 p-2 rounded-xl border border-blue-500/20">{item.notes}</p>}
+                      <h3 className="font-bold text-stone-900 text-base leading-tight">{item.foodName}</h3>
+                      {item.notes && <p className="text-xs text-[#2D6A4F] mt-1 font-medium bg-emerald-50 p-2 rounded-xl border border-emerald-100">{item.notes}</p>}
                     </div>
-                    <button onClick={() => updateQuantity(item.cartItemId, 0)} className="text-red-500 text-xs font-bold bg-red-500/10 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition">
+                    <button onClick={() => updateQuantity(item.cartItemId, 0)} className="text-red-500 text-xs font-bold bg-red-50 px-3 py-1.5 rounded-xl hover:bg-red-100 transition">
                       {t.delete}
                     </button>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-700/40">
-                    <span className="text-sm text-[#FF6B35] font-extrabold">{item.price.toLocaleString()} đ</span>
-                    <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1">
-                      <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Minus size={12} /></button>
+                  <div className="flex justify-between items-center pt-2 border-t border-stone-200">
+                    <span className="text-sm text-[#E8541E] font-extrabold">{item.price.toLocaleString()} đ</span>
+                    <div className="flex items-center gap-2 bg-[#FF6B35] rounded-2xl p-1 text-white shadow-sm">
+                      <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} className="p-1.5 hover:bg-black/10 rounded-xl transition active:scale-90"><Minus size={12} /></button>
                       <input 
                         type="number" 
                         value={item.quantity} 
                         onChange={(e) => updateQuantity(item.cartItemId, Math.max(0, parseInt(e.target.value) || 0))}
-                        className="w-10 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-8 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
-                      <button onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition active:scale-90"><Plus size={12} /></button>
+                      <button onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} className="p-1.5 hover:bg-black/10 rounded-xl transition active:scale-90"><Plus size={12} /></button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 pt-6 border-t border-slate-800">
-              <div className="flex justify-between text-2xl font-bold mb-6">
+            <div className="mt-4 pt-5 border-t border-stone-200">
+              <div className="flex justify-between text-xl font-bold mb-5 text-stone-900">
                 <span>{t.total}:</span>
-                <span className="text-[#FF6B35] font-bold">{getTotalPrice().toLocaleString()} đ</span>
+                <span className="text-[#E8541E] text-2xl">{getTotalPrice().toLocaleString()} đ</span>
               </div>
               <button 
                 onClick={submitOrder} 
                 disabled={isOrdering}
-                className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition disabled:bg-slate-800 flex items-center justify-center gap-2 active:scale-[0.98]"
+                className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition disabled:bg-stone-300 flex items-center justify-center gap-2 shadow-lg shadow-[#FF6B35]/25 active:scale-[0.98]"
               >
                 <Check size={20} />
                 {isOrdering ? t.sending : t.confirmOrder}
@@ -530,32 +554,32 @@ const CustomerMenu: React.FC = () => {
       )}
 
       {customizingFood && (
-        <div className="fixed inset-0 bg-black/85 z-50 flex flex-col justify-end backdrop-blur-sm">
-          <div className="bg-slate-900 w-full max-w-md mx-auto rounded-t-[40px] p-6 flex flex-col animate-slide-up border-t border-slate-800 shadow-2xl">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md mx-auto rounded-t-[40px] p-6 flex flex-col animate-slide-up shadow-2xl">
+            <div className="flex justify-between items-center mb-5">
               <div>
-                <h2 className="text-2xl font-bold">{customizingFood.name}</h2>
-                <p className="text-xs text-slate-400 mt-1">Chọn món thêm tùy thích</p>
+                <h2 className="text-2xl font-bold text-stone-900">{customizingFood.name}</h2>
+                <p className="text-xs text-stone-500 mt-0.5">Tùy chọn khẩu vị & món ăn kèm</p>
               </div>
-              <button onClick={() => setCustomizingFood(null)} className="p-3 bg-slate-800 rounded-full hover:bg-slate-700 transition">
-                <X size={20} />
+              <button onClick={() => setCustomizingFood(null)} className="p-2.5 bg-stone-100 rounded-full hover:bg-stone-200 text-stone-600 transition">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-6 mb-8 max-h-[45vh] overflow-y-auto pr-1">
+            <div className="space-y-5 mb-6 max-h-[48vh] overflow-y-auto pr-1">
               {sizeOptions.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">1. CHỌN KÍCH CỠ (CHỈ CHỌN 1)</h4>
-                  <div className="grid grid-cols-2 gap-3">
+                  <h4 className="text-xs font-bold text-[#2D6A4F] uppercase tracking-wider mb-2.5">1. CHỌN KÍCH CỠ (BẮT BUỘC)</h4>
+                  <div className="grid grid-cols-2 gap-2.5">
                     {sizeOptions.map((opt) => (
                       <button 
                         key={opt.name}
                         type="button"
                         onClick={() => setSelectedSizeOption(opt)}
-                        className={`p-4 rounded-2xl border font-bold text-sm text-center transition ${
+                        className={`p-3.5 rounded-2xl border font-bold text-xs text-center transition ${
                           selectedSizeOption?.name === opt.name 
-                            ? 'bg-[#FF6B35]/10 border-[#FF6B35] text-[#FF6B35]' 
-                            : 'bg-slate-950 border-slate-800 text-slate-300'
+                            ? 'bg-orange-50 border-[#FF6B35] text-[#FF6B35] shadow-sm' 
+                            : 'bg-[#FAF7F2] border-stone-200 text-stone-700'
                         }`}
                       >
                         {opt.name} ({opt.price < 0 ? "" : "+"}{opt.price.toLocaleString()}đ)
@@ -567,30 +591,30 @@ const CustomerMenu: React.FC = () => {
 
               {toppingOptions.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-                    {sizeOptions.length > 0 ? '2. CHỌN MÓN THÊM (CHỌN NHIỀU)' : 'CHỌN MÓN THÊM (CHỌN NHIỀU)'}
+                  <h4 className="text-xs font-bold text-[#2D6A4F] uppercase tracking-wider mb-2.5">
+                    {sizeOptions.length > 0 ? '2. MÓN ĂN KÈM (CHỌN THÊM)' : 'MÓN ĂN KÈM (CHỌN THÊM)'}
                   </h4>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {toppingOptions.map((opt: any) => {
                       const qty = selectedToppings[opt.name] || 0;
                       return (
                         <div 
                           key={opt.name}
-                          className="p-4 rounded-2xl border border-slate-800 bg-slate-950 flex justify-between items-center"
+                          className="p-3.5 rounded-2xl border border-stone-200 bg-[#FAF7F2] flex justify-between items-center shadow-sm"
                         >
                           <div className="flex flex-col">
-                            <span className="font-bold text-sm text-white">{opt.name}</span>
-                            <span className="text-xs text-[#FF6B35] font-bold">{opt.price < 0 ? `${opt.price.toLocaleString()} đ` : `+${opt.price.toLocaleString()} đ`}</span>
+                            <span className="font-bold text-sm text-stone-900">{opt.name}</span>
+                            <span className="text-xs text-[#E8541E] font-bold">{opt.price < 0 ? `${opt.price.toLocaleString()} đ` : `+${opt.price.toLocaleString()} đ`}</span>
                           </div>
 
                           {qty > 0 ? (
-                            <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1 shadow-lg">
-                              <button type="button" onClick={() => updateToppingQty(opt.name, -1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Minus size={14} /></button>
-                              <span className="font-extrabold text-sm w-4 text-center text-white">{qty}</span>
-                              <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Plus size={14} /></button>
+                            <div className="flex items-center gap-2 bg-[#FF6B35] text-white rounded-2xl p-1 shadow-sm">
+                              <button type="button" onClick={() => updateToppingQty(opt.name, -1)} className="p-1 hover:bg-black/10 rounded-xl transition"><Minus size={13} /></button>
+                              <span className="font-extrabold text-xs w-4 text-center">{qty}</span>
+                              <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="p-1 hover:bg-black/10 rounded-xl transition"><Plus size={13} /></button>
                             </div>
                           ) : (
-                            <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-slate-300 transition">
+                            <button type="button" onClick={() => updateToppingQty(opt.name, 1)} className="bg-white hover:bg-stone-100 border border-stone-200 p-2 rounded-xl text-stone-700 transition active:scale-95 shadow-sm">
                               <Plus size={14} />
                             </button>
                           )}
@@ -601,24 +625,24 @@ const CustomerMenu: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex items-center justify-between bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                <span className="text-xs font-bold text-slate-400">CHỌN SỐ LƯỢNG MÓN CHÍNH:</span>
-                <div className="flex items-center gap-2.5 bg-[#FF6B35] rounded-2xl p-1">
-                  <button type="button" onClick={() => setCustomQty(prev => Math.max(1, prev - 1))} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Minus size={14} /></button>
+              <div className="flex items-center justify-between bg-[#FAF7F2] p-3.5 rounded-2xl border border-stone-200">
+                <span className="text-xs font-bold text-stone-600">SỐ LƯỢNG MÓN:</span>
+                <div className="flex items-center gap-2 bg-[#FF6B35] text-white rounded-2xl p-1 shadow-sm">
+                  <button type="button" onClick={() => setCustomQty(prev => Math.max(1, prev - 1))} className="p-1 hover:bg-black/10 rounded-xl transition"><Minus size={13} /></button>
                   <input 
                     type="number" 
                     value={customQty} 
                     onChange={(e) => setCustomQty(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-10 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-8 bg-transparent text-center font-extrabold text-sm text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <button type="button" onClick={() => setCustomQty(prev => prev + 1)} className="p-1.5 hover:bg-white/10 rounded-xl transition"><Plus size={14} /></button>
+                  <button type="button" onClick={() => setCustomQty(prev => prev + 1)} className="p-1 hover:bg-black/10 rounded-xl transition"><Plus size={13} /></button>
                 </div>
               </div>
             </div>
 
             <button 
               onClick={handleConfirmCustomization}
-              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition"
+              className="w-full bg-[#FF6B35] hover:bg-[#E8541E] text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-[#FF6B35]/25 active:scale-[0.98]"
             >
               THÊM VÀO GIỎ HÀNG
             </button>
