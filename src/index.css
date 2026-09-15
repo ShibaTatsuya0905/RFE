@@ -60,3 +60,25 @@ html.light-mode svg {
 .animate-steam {
   animation: steam 1.6s infinite ease-in-out;
 }
+
+@keyframes eat-slice {
+  0%, 15% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  22%, 82% { 
+    opacity: 0; 
+    transform: scale(0.4) translate(8px, 8px); 
+  }
+  92%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+.slice-1 { animation: eat-slice 2.4s infinite ease-in-out; animation-delay: 0s; transform-origin: 50px 50px; }
+.slice-2 { animation: eat-slice 2.4s infinite ease-in-out; animation-delay: 0.35s; transform-origin: 50px 50px; }
+.slice-3 { animation: eat-slice 2.4s infinite ease-in-out; animation-delay: 0.7s; transform-origin: 50px 50px; }
+.slice-4 { animation: eat-slice 2.4s infinite ease-in-out; animation-delay: 1.05s; transform-origin: 50px 50px; }
+.slice-5 { animation: eat-slice 2.4s infinite ease-in-out; animation-delay: 1.4s; transform-origin: 50px 50px; }
+.slice-6 { animation: eat-slice 2.4s infinite ease-in-out; animation-delay: 1.75s; transform-origin: 50px 50px; }
