@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, SlidersHorizontal, Eye, Printer, X, CheckCircle2, Clock, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Search, SlidersHorizontal, Eye, Printer, X, CheckCircle2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
@@ -11,7 +11,7 @@ const OrdersManagement: React.FC = () => {
   const { orders, setOrders } = useOrderStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [viewScope, setViewScope] = useState<'all' | 'active'>('all'); // Tab xem: Toàn bộ hoặc Chỉ đơn đang mở
+  const [viewScope, setViewScope] = useState<'all' | 'active'>('all'); 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
