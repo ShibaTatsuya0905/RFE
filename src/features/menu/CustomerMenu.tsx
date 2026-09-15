@@ -300,12 +300,12 @@ const CustomerMenu: React.FC = () => {
               <StarRating label="Thái độ phục vụ" value={ratings.service} onChange={v => setRatings({...ratings, service: v})} />
               <StarRating label="Tốc độ lên món" value={ratings.speed} onChange={v => setRatings({...ratings, speed: v})} />
               <StarRating label="Giá cả hợp lý" value={ratings.value} onChange={v => setRatings({...ratings, value: v})} />
-              <textarea 
-                value={comment} 
-                onChange={e => setComment(e.target.value)} 
-                placeholder="Nhập góp ý thêm của bạn (Không bắt buộc)..." 
-                className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-4 text-sm mt-4 focus:outline-none focus:border-[#FF6B35]" 
-                rows={3} 
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                placeholder="Nhập góp ý thêm của bạn (Không bắt buộc)..."
+                className="w-full bg-white border border-stone-200 rounded-2xl p-4 text-sm text-stone-900 placeholder:text-stone-400 mt-4 focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20 transition"
+                rows={3}
               />
               <button 
                 onClick={submitFeedback} 
