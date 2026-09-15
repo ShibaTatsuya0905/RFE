@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Search, UserPlus, SlidersHorizontal, Trash2, Edit2, X, Check, RotateCcw } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useToastStore } from '../../store/useToastStore';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const EmployeeManagement: React.FC = () => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [showTrash, setShowTrash] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
@@ -16,11 +18,15 @@ const EmployeeManagement: React.FC = () => {
   const addToast = useToastStore(state => state.addToast);
 
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
       const url = showTrash ? '/users/deleted' : '/users';
       const { data } = await apiClient.get(url);
       setEmployees(data);
-    } catch (error) {}
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -82,6 +88,10 @@ const EmployeeManagement: React.FC = () => {
     const matchesRole = roleFilter === 'All' || emp.role === roleFilter;
     return matchesSearch && matchesRole;
   });
+
+  if (loading && employees.length === 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -3,6 +3,7 @@ import { Plus, Download, Printer, Table as TableIcon, X, Check, Trash2, Edit2, R
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const TableManagement: React.FC = () => {
   useSignalR();
@@ -12,16 +13,20 @@ const TableManagement: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTable, setEditingTable] = useState<any | null>(null);
   const [showTrash, setShowTrash] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({ name: '', capacity: 2 });
 
   const fetchTables = async () => {
+    setLoading(true);
     try {
       const url = showTrash ? '/tables/deleted' : '/tables';
       const { data } = await apiClient.get(url);
       setTables(data);
     } catch (error) {
       console.error("Error fetching tables");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,6 +92,10 @@ const TableManagement: React.FC = () => {
       default: return { text: 'Reserved', color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20', dot: 'bg-yellow-500' };
     }
   };
+
+  if (loading && tables.length === 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -189,7 +198,8 @@ const TableManagement: React.FC = () => {
             <p className="text-sm text-slate-400 mb-8">{qrModalTable.name} • {qrModalTable.capacity} Seats</p>
             
             <div className="w-56 h-56 bg-white p-3 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-blue-500/10">
-<img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://rfe-4q7z.onrender.com/menu/${qrModalTable.id}`} alt="QR Code" className="w-full h-full" /></div>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://rfe-4q7z.onrender.com/menu/${qrModalTable.id}`} alt="QR Code" className="w-full h-full" />
+            </div>
 
             <button onClick={() => window.print()} className="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition shadow-lg shadow-blue-500/20">
               <Printer size={18} /> Print QR Tag

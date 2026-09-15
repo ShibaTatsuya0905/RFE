@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Check, Utensils, Image as ImageIcon, Tags, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useToastStore } from '../../store/useToastStore';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const AdminMenuManagement: React.FC = () => {
   const [foods, setFoods] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showTrash, setShowTrash] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
   
@@ -28,6 +30,7 @@ const AdminMenuManagement: React.FC = () => {
   const addToast = useToastStore(state => state.addToast);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const url = showTrash ? '/foods/deleted' : '/foods?pageSize=999';
       const [foodsRes, catsRes] = await Promise.all([
@@ -51,7 +54,10 @@ const AdminMenuManagement: React.FC = () => {
       if (catsRes.data.length > 0 && formData.categoryId === 0) {
         setFormData(prev => ({ ...prev, categoryId: catsRes.data[0].id }));
       }
-    } catch (error) {}
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, [showTrash]);
@@ -179,6 +185,10 @@ const AdminMenuManagement: React.FC = () => {
   const totalPages = Math.ceil(filteredFoods.length / pageSize) || 1;
   const displayedFoods = filteredFoods.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  if (loading && foods.length === 0) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -286,7 +296,7 @@ const AdminMenuManagement: React.FC = () => {
             <form onSubmit={handleSubmitCategory} className="space-y-4">
               <div>
                 <label className="text-xs text-slate-400 font-semibold block mb-1.5">Category Name</label>
-                <input required type="text" placeholder="e.g. Main Dish, Drinks..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-blue-500 transition" />
+                <input required type="text" placeholder="e.g. Main Dish, Drinks..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none" />
               </div>
               <button type="submit" disabled={isSubmitting} className="w-full bg-slate-800 hover:bg-slate-700 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-white transition">
                 <Check size={18} /> {isSubmitting ? 'SAVING...' : 'SAVE CATEGORY'}
