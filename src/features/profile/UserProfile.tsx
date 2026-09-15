@@ -10,7 +10,6 @@ const mockLogs = [
 
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();
-  const [setUser] = useState<any>(null);
 
   const [profileData, setProfileData] = useState({
     name: '',
@@ -26,16 +25,19 @@ const UserProfile: React.FC = () => {
   });
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setUser(parsed);
-      setProfileData({
-        name: parsed.fullName || 'Staff User',
-        email: `${parsed.username}@gourmetpalace.com`,
-        phone: '0901234567',
-        role: parsed.role || 'Staff'
-      });
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        setProfileData({
+          name: parsed.fullName || parsed.name || 'Staff User',
+          email: parsed.email || `${parsed.username || 'staff'}@gourmetpalace.com`,
+          phone: parsed.phone || '0901234567',
+          role: parsed.role || 'Staff'
+        });
+      }
+    } catch (err) {
+      console.error('Lỗi đọc dữ liệu user:', err);
     }
   }, []);
 
