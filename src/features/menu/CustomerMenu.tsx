@@ -49,7 +49,7 @@ const dictionary = {
   }
 };
 
-const sizeKeywords = ['tô', 'size', 'lớn', 'nhỏ', 'thường', 'đặc biệt', 'regular', 'large', 'small', 'special'];
+const sizeKeywords = ['size', 'lớn', 'nhỏ', 'thường', 'đặc biệt', 'regular', 'large', 'small', 'special'];
 
 const CustomerMenu: React.FC = () => {
   const { connection } = useSignalR();
