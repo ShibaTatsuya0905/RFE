@@ -6,6 +6,7 @@ import WeeklyOrdersChart from '../../components/dashboard/WeeklyOrdersChart';
 import PopularFoodsChart from '../../components/dashboard/PopularFoodsChart';
 import RecentOrders from '../../components/dashboard/RecentOrders';
 import RecentTransactions from '../../components/dashboard/RecentTransactions';
+import FeedbackChart from './FeedbackChart';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import apiClient from '../../services/apiClient';
 
@@ -73,9 +74,10 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <WeeklyChartComponent data={summary.weeklyWorkload} />
         <PopularChartComponent data={summary.popularFoods} />
+        <FeedbackChart data={summary.feedbackScores} />
       </div>
 
       <RecentTransactions />
