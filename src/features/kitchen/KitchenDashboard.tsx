@@ -4,6 +4,7 @@ import { ChefHat, Play, CheckCircle, Clock, AlertTriangle, ArrowLeft, Flame, Sou
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import type { Order } from '../../types';
 
 const Timer: React.FC<{ startTime: string }> = ({ startTime }) => {
@@ -106,9 +107,13 @@ const KitchenDashboard: React.FC = () => {
   useSignalR();
   const navigate = useNavigate();
   const { orders, setOrders } = useOrderStore();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient.get('/orders/active').then(res => setOrders(res.data));
+    setLoading(true);
+    apiClient.get('/orders/active')
+      .then(res => setOrders(res.data))
+      .finally(() => setLoading(false));
   }, [setOrders]);
 
   const handleChangeStatus = async (id: number, status: number) => {
@@ -120,6 +125,10 @@ const KitchenDashboard: React.FC = () => {
   };
 
   const activeOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Cooking' || o.status === 'Ready');
+
+  if (loading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0B1120] p-8 text-white relative">

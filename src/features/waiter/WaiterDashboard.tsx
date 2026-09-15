@@ -4,6 +4,7 @@ import { Bell, LogOut, Check, Sparkles, AlertCircle } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import type { Order } from '../../types';
 
 const Timer: React.FC<{ startTime: string }> = ({ startTime }) => {
@@ -61,9 +62,13 @@ const WaiterDashboard: React.FC = () => {
   useSignalR();
   const navigate = useNavigate();
   const { orders, setOrders, notifications, removeNotification } = useOrderStore();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient.get('/orders/active').then(res => setOrders(res.data));
+    setLoading(true);
+    apiClient.get('/orders/active')
+      .then(res => setOrders(res.data))
+      .finally(() => setLoading(false));
   }, [setOrders]);
 
   const handleChangeStatus = async (id: number, status: number) => {
@@ -82,8 +87,12 @@ const WaiterDashboard: React.FC = () => {
 
   const readyToServeOrders = orders.filter(o => o.status === 'Ready');
 
+  if (loading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="min-h-screen bg-[#0B1120] p-8 text-white font-sans flex justify-center pb-8 overflow-y-auto">
+    <div className="min-h-screen bg-[#0B1120] text-white font-sans flex justify-center pb-8 overflow-y-auto">
       <div className="w-full max-w-md p-4 flex flex-col justify-between">
         <div>
           <div className="flex justify-between items-center mb-6 pt-4">

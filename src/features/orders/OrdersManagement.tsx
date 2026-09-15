@@ -3,6 +3,7 @@ import { Search, SlidersHorizontal, Eye, Printer, X, CheckCircle2, Clock, Chevro
 import apiClient from '../../services/apiClient';
 import { useSignalR } from '../../hooks/useSignalR';
 import { useOrderStore } from '../../store/useOrderStore';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import type { Order } from '../../types';
 
 const OrdersManagement: React.FC = () => {
@@ -12,10 +13,14 @@ const OrdersManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 8;
 
   useEffect(() => {
-    apiClient.get('/orders/active').then(res => setOrders(res.data));
+    setLoading(true);
+    apiClient.get('/orders/active')
+      .then(res => setOrders(res.data))
+      .finally(() => setLoading(false));
   }, [setOrders]);
 
   const handleUpdateStatus = async (orderId: number, nextStatus: number) => {
@@ -67,6 +72,10 @@ const OrdersManagement: React.FC = () => {
 
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  if (loading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

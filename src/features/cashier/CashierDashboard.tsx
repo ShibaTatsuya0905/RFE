@@ -4,6 +4,7 @@ import apiClient from '../../services/apiClient';
 import { useOrderStore } from '../../store/useOrderStore';
 import { speakVietnamese } from '../../utils/speech';
 import { useSignalR } from '../../hooks/useSignalR';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import type { Order } from '../../types';
 
 const CashierDashboard: React.FC = () => {
@@ -13,9 +14,13 @@ const CashierDashboard: React.FC = () => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
   const [orderHistory, setOrderHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient.get('/orders/active').then(res => setOrders(res.data));
+    setLoading(true);
+    apiClient.get('/orders/active')
+      .then(res => setOrders(res.data))
+      .finally(() => setLoading(false));
   }, [setOrders]);
 
   const fetchHistory = async () => {
@@ -55,6 +60,10 @@ const CashierDashboard: React.FC = () => {
       removeNotification(billNotif.id);
     }
   };
+
+  if (loading && orders.length === 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <>
