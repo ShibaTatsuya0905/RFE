@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Receipt, Coins, QrCode, Printer, Table as TableIcon, X, Check, History, Clock } from 'lucide-react';
+import { Receipt, Coins, QrCode, Printer, Table as TableIcon, X, History, Clock } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 import { useOrderStore } from '../../store/useOrderStore';
 import { speakVietnamese } from '../../utils/speech';
@@ -51,6 +51,7 @@ const CashierDashboard: React.FC = () => {
     }
   }, [activeTab]);
 
+  // Lắng nghe thanh toán tự động qua Webhook
   useEffect(() => {
     if (connection) {
       const handleAutoPayment = (data: { orderId: number; tableName: string; amount: number }) => {
@@ -59,8 +60,8 @@ const CashierDashboard: React.FC = () => {
           setSelectedOrder(null);
         }
         
+        // Sửa lại cách setOrders đúng kiểu của Zustand
         setOrders(orders.filter(o => o.id !== data.orderId));
-        
         fetchHistory();
       };
 
@@ -255,36 +256,56 @@ const CashierDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Modal Quét mã QR */}
+        {/* Modal Quét mã QR Tự Động */}
         {isQrModalOpen && selectedOrder && (
           <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 backdrop-blur-md">
             <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[32px] p-8 shadow-2xl relative text-center animate-slide-up">
-              <button onClick={() => setIsQrModalOpen(false)} className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-white transition">
+              <button 
+                onClick={() => setIsQrModalOpen(false)} 
+                className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-white transition"
+              >
                 <X size={18} />
               </button>
-              <h3 className="text-2xl font-bold mb-1 text-white">Chuyển Khoản QR</h3>
-              <p className="text-sm text-slate-400 mb-6">Quét mã để thanh toán đơn hàng</p>
               
-              <div className="w-56 h-56 bg-white p-2 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-2xl">
+              <h3 className="text-2xl font-bold mb-1 text-white">Chuyển Khoản QR</h3>
+              <p className="text-xs text-slate-400 mb-5">Quét mã VietQR bằng bất kỳ App Ngân hàng nào</p>
+              
+              {/* Ảnh mã QR */}
+              <div className="w-56 h-56 bg-white p-2 rounded-3xl mx-auto mb-5 flex items-center justify-center shadow-2xl">
                 <img 
-                  src={`https://img.vietqr.io/image/vietinbank-105876001630-compact2.png?amount=${selectedOrder.totalAmount}&addInfo=${selectedOrder.orderCode}&accountName=LE%20MINH%20TUAN`} 
+                  src={`https://img.vietqr.io/image/vietinbank-105876001630-compact2.png?amount=${selectedOrder.totalAmount}&addInfo=SEVQR%20${selectedOrder.orderCode}&accountName=LE%20MINH%20TUAN`} 
                   alt="VietQR" 
                   className="w-full h-full object-contain rounded-2xl"
                 />
               </div>
 
-              <div className="bg-slate-950/40 p-4 rounded-2xl text-left text-xs space-y-1.5 border border-slate-800/40 mb-6 font-semibold">
-                <div className="flex justify-between"><span className="text-slate-500">Ngân hàng:</span><span className="text-slate-200">VietinBank (Công Thương)</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Số tài khoản:</span><span className="text-slate-200 font-mono">105876001630</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Chủ tài khoản:</span><span className="text-slate-200">LE MINH TUAN</span></div>
-                <div className="flex justify-between"><span className="text-slate-500">Số tiền:</span><span className="text-green-400 font-bold">{selectedOrder.totalAmount.toLocaleString()} đ</span></div>
+              {/* Thông tin tài khoản & Nội dung chuyển khoản */}
+              <div className="bg-slate-950/60 p-4 rounded-2xl text-left text-xs space-y-2 border border-slate-800/80 mb-5">
+                <div className="flex justify-between"><span className="text-slate-400">Ngân hàng:</span><span className="text-slate-200 font-semibold">VietinBank (Công Thương)</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Số tài khoản:</span><span className="text-slate-200 font-mono font-bold">105876001630</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Chủ tài khoản:</span><span className="text-slate-200 font-semibold">LE MINH TUAN</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Số tiền:</span><span className="text-emerald-400 font-bold text-sm">{selectedOrder.totalAmount.toLocaleString()} đ</span></div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-slate-800/60">
+                  <span className="text-amber-400 font-semibold">Nội dung CK:</span>
+                  <span className="text-amber-300 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                    SEVQR {selectedOrder.orderCode}
+                  </span>
+                </div>
               </div>
 
+              {/* Thanh trạng thái tự động duyệt */}
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-2xl flex items-center justify-center gap-3 text-xs text-emerald-400 font-bold">
+                <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <span>Hệ thống tự động duyệt khi nhận tiền...</span>
+              </div>
+
+              {/* Nút bấm tay nhỏ dự phòng */}
               <button 
+                type="button"
                 onClick={() => handlePay('QrCode')}
-                className="w-full bg-green-600 hover:bg-green-500 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition active:scale-95"
+                className="w-full mt-3 text-[11px] text-slate-500 hover:text-slate-300 transition text-center underline"
               >
-                <Check size={18} /> XÁC NHẬN ĐÃ NHẬN TIỀN
+                Xác nhận thủ công (nếu khách chuyển bằng tiền mặt)
               </button>
             </div>
           </div>
@@ -323,7 +344,7 @@ const CashierDashboard: React.FC = () => {
           <div className="text-center space-y-2 pt-2 border-t border-dashed border-black">
             <p className="font-bold text-[10px] tracking-wider">QUÉT MÃ CHUYỂN KHOẢN (VIETQR)</p>
             <div className="w-44 h-44 mx-auto p-1 bg-white border border-gray-300 rounded-xl">
-              <img src={`https://img.vietqr.io/image/vietinbank-105876001630-compact2.png?amount=${selectedOrder.totalAmount}&addInfo=${selectedOrder.orderCode}&accountName=LE%20MINH%20TUAN`} alt="VietQR" className="w-full h-full object-contain" />
+              <img src={`https://img.vietqr.io/image/vietinbank-105876001630-compact2.png?amount=${selectedOrder.totalAmount}&addInfo=SEVQR%20${selectedOrder.orderCode}&accountName=LE%20MINH%20TUAN`} alt="VietQR" className="w-full h-full object-contain" />
             </div>
             <div className="border-b border-dashed border-black my-2" />
             <p className="italic text-[10px]">Cảm ơn quý khách & Hẹn gặp lại!</p>
