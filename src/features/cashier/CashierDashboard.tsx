@@ -8,7 +8,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import type { Order } from '../../types';
 
 const CashierDashboard: React.FC = () => {
-  useSignalR();
+  const { connection } = useSignalR();
   const { orders, setOrders, notifications, removeNotification } = useOrderStore();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -16,7 +16,6 @@ const CashierDashboard: React.FC = () => {
   const [orderHistory, setOrderHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Lấy các đơn đang phục vụ
   const fetchActiveOrders = () => {
     setLoading(true);
     apiClient.get('/orders/active')
@@ -28,13 +27,11 @@ const CashierDashboard: React.FC = () => {
       .finally(() => setLoading(false));
   };
 
-  // SỬA: Lấy lịch sử từ /orders để lấy cả đơn đã thanh toán (Paid)
   const fetchHistory = async () => {
     try {
       const res = await apiClient.get('/orders?pageSize=999');
       const list = Array.isArray(res.data) ? res.data : (res.data?.items || res.data?.data || []);
       
-      // Sắp xếp đơn mới nhất lên trên cùng
       const sorted = [...list].sort((a: any, b: any) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -54,6 +51,26 @@ const CashierDashboard: React.FC = () => {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    if (connection) {
+      const handleAutoPayment = (data: { orderId: number; tableName: string; amount: number }) => {
+        if (selectedOrder && selectedOrder.id === data.orderId) {
+          setIsQrModalOpen(false);
+          setSelectedOrder(null);
+        }
+        
+        setOrders(orders.filter(o => o.id !== data.orderId));
+        
+        fetchHistory();
+      };
+
+      connection.on('PaymentReceivedAuto', handleAutoPayment);
+      return () => {
+        connection.off('PaymentReceivedAuto', handleAutoPayment);
+      };
+    }
+  }, [connection, selectedOrder, orders, setOrders]);
+
   const handlePay = async (paymentMethod: string) => {
     if (!selectedOrder) return;
     try {
@@ -67,12 +84,10 @@ const CashierDashboard: React.FC = () => {
         console.error(e);
       }
       
-      // Xóa khỏi danh sách đơn đang phục vụ
       setOrders(orders.filter(o => o.id !== selectedOrder.id));
       setSelectedOrder(null);
       setIsQrModalOpen(false);
 
-      // Cập nhật lại lịch sử nếu đang mở hoặc sau này mở
       fetchHistory();
     } catch (error) {
       alert('Lỗi khi thanh toán!');
@@ -276,7 +291,7 @@ const CashierDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Bản in Hóa đơn (Chỉ xuất hiện khi bấm In hóa đơn) */}
+      {/* Bản in Hóa đơn */}
       {selectedOrder && (
         <div className="hidden print:block w-[80mm] mx-auto bg-white text-black p-4 font-mono text-xs leading-tight">
           <div className="text-center mb-3">

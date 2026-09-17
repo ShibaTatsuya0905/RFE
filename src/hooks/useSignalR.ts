@@ -45,6 +45,15 @@ export const useSignalR = () => {
         connection.on('TableStatusUpdated', (tableId: number, status: number) => {
           updateTableStatus(tableId, status);
         });
+
+        connection.on('PaymentReceivedAuto', (data: { orderId: number; tableName: string; amount: number }) => {
+          try {
+            speakVietnamese(`Hệ thống đã nhận ${data.amount.toLocaleString()} đồng từ ${data.tableName}. Thanh toán thành công!`);
+          } catch (e) {
+            console.error(e);
+          }
+        });
+        
       }).catch(err => console.error(err));
     }
     return () => {
